@@ -96,6 +96,10 @@ elif pagina_seleccionada == "Explora":
             accept_new_options=False  # Desactivamos la opcion de agregar nuevas opciones
         )
     st.markdown(f"Géneros seleccionados: {generos_seleccionados}") # Esto mostrará los géneros que seleccionó el usuario
+
+    # BUSCADOR
+    encontrado = False   # Verifica si se hallaron resultados o no
+    
 elif pagina_seleccionada == "Alcance":
     st.markdown("Contenido")
 elif pagina_seleccionada == "Géneros":
