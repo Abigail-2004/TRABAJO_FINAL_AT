@@ -99,6 +99,36 @@ elif pagina_seleccionada == "Explora":
 
     # BUSCADOR
     encontrado = False   # Verifica si se hallaron resultados o no
+    for i in range(len(df)): # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
+        titulo_pelicula = df.loc[i, "Título"] # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
+        portada_pelicula = df.loc[i, "Portada"] # Accede al link de la imagen de portada correspondiente al nombre "titulo_pelicula" a la fila i.
+        generos= df.loc[i, "Género"] # Accede a los géneros, es el más importante del buscador.
+        col1,col2 = st.columns([1, 2])
+        with col1: st.markdown(f"""
+                <h4><i><b>{titulo_pelicula}</b></i></h4>
+                <ul>
+                    <li>Género: {generos}</li>
+                </ul>
+                """, unsafe_allow_html=True)
+        with col2: st.image(portada_pelicula, width=200)
+    # SISTEMA DE FILTRO
+    coincide_genero= True # El uso de la variable boleana ayudará a filtrar la película que corresponde con los generos seleccionados por el usuario.
+    for genero in generos_seleccionados: # Iteramos por cada género que el usuario haya seleccionado en el filtro de géneros.
+        if genero not in str(generos).lower(): # Si ese género seleccionado no está  en los géneros de la canción actual...
+            coincide_genero= False # la varible booleana coincide_generos será False
+            break # y es bucle se rompe.
+        if coincide_genero:  # Si la canción sí coincide con los géneros seleccionados…
+            st.markdown(f"## {titulo_pelicula}") # Mostramos el título de la canción en formato grande (##).
+            st.markdown(f"Álbum: *{album_cancion}* ({año_cancion})") # Mostramos el nombre del álbum en cursiva y el año entre paréntesis.
+                col1, col2 = st.columns([1, 2])  # Creamos dos columnas: la primera más pequeña para la portada y la segunda más grande para los botones de enlaces.
+                with col1: # En la columna izquierda mostramos la imagen de la canción. Se fija el ancho a 300 píxeles.
+                    st.image(portada_pelicula, width=300)
+                with col2: # En la otra columna...
+                    st.markdown(f"<a href='{link_spotify}' target='_blank'><button>🎧 Escuchar en Spotify</button></a>", unsafe_allow_html=True) # Se crea un botón HTML que lleva al link de Spotify en una nueva pestaña.                    
+                    st.markdown(f"<a href='{letras_cancion}' target='_blank'><button>📜 Ver Letra</button></a>", unsafe_allow_html=True) # Botón que abre la página con la letra de la canción.
+                    if df_discografia.loc[i, "Video Musical"] == "True": # Verificamos si esa canción tiene video musical ( si la columna "Video Musical" dice "True").
+                        st.markdown(f"<a href='{mv_cancion}' target='_blank'><button>🎬 Ver MV</button></a></div>", unsafe_allow_html=True) # Si sí tiene, mostramos el botón para ver el video musical.
+                    encontrado = True # Activa la variable booleana para marcar que sí hubo un resultado
     
 elif pagina_seleccionada == "Alcance":
     st.markdown("Contenido")
