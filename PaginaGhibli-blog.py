@@ -30,6 +30,8 @@ import matplotlib.pyplot as plt
 import streamlit as st 
 import pandas as pd
 import random # Para el boton musical que crearemos a continuacion
+import numpy as np
+import matplotlib.patches as mpatches # Para algunos graficos que se se veran en el apartado técnico
 
 
 
@@ -40,17 +42,18 @@ df = pd.read_excel("Ghibli-tabla.xlsx")
 
 
 
-paginas = ["Inicio", "Explora", "Alcance", "Géneros", "Curiosidades"]
+paginas = ["Inicio", "Explora", "Apartado Técnico", "Apartado Artistico", "Curiosidades"]
 pagina_seleccionada = st.sidebar.selectbox('Selecciona una página', paginas)
 # La función "if" permite que si escogemos "Inicio" nos encontraremos en la primera página   
 if pagina_seleccionada == "Inicio":
     #st.image("logo.png", width=700)
-    # La función st.markdown permite establecer ciertos parámetros en texto sen Streamlit
-    #st.markdown("<h1 style='text-align: center;'><em>ANATOMÍA DE UN ÍCONO:</em><br>Explorando la discografía de <br><span style='color: #d8a7b1;'>Taylor Swift</span></h1>", unsafe_allow_html=True)
-    #
+    # La función st.markdown establece parámetros de texto en Streamlit.
+    # Para centrar texto se usa 'text-align: center;'
+    st.markdown("<h1 style='text-align: center;'>¡Bienvenido/a al mundo encantado de Studio Ghibli! ✨</h1>", unsafe_allow_html=True)
+    
     st.markdown(""" 
     <div style='font-size: 30px;'>
-    <p>¡Bienvenido/a al mundo encantado de Studio Ghibli! ✨ Este proyecto nace con la intención de reunir, en un solo lugar, la esencia y belleza de las películas del estudio. Aquí podrás descubrir datos, curiosidades y elementos clave que hacen únicas a estas obras.</p>
+    <p>Este proyecto nace con la intención de reunir, en un solo lugar, la esencia y belleza de las películas del estudio. Aquí podrás descubrir datos, curiosidades y elementos clave que hacen únicas a estas obras.</p>
     <p> </p>
     <p>Nuestro objetivo es ofrecerte un espacio entretenido, informativo y fácil de navegar, para que puedas explorar, aprender y maravillarte con la magia que Ghibli ha compartido con el mundo.
     </div>
@@ -64,75 +67,339 @@ if pagina_seleccionada == "Inicio":
     with col3:
         st.write(" ")
 elif pagina_seleccionada == "Explora":
-    st.markdown("<h1 style='text-align: center;'><em>EXPLORA</em></h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezadp del apartado
+    st.markdown("<h1 style='text-align: center;'>EXPLORA</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezadp del apartado
     st.markdown("""
     <div style='text-align: center; font-size: 20px;'>
-    <p>¡Explora a tu criterio El Universo Ghibli!</p>
+    <p>¡Explora a tu criterio El Universo Ghibli! ◝(ᵔᗜᵔ)◜ El estudio cuenta con diversos géneros que pueden ser de tu agrado, o interés.</p>
     """, unsafe_allow_html=True)
     # Prepararemos una búsqueda por filtros
+    
     st.markdown("<h2 style='text-align: center;'>POR GÉNERO</h2>", unsafe_allow_html=True)
 
     # BÚSQUEDA POR GÉNERO
 
     #Para esto, crearemos una lista con los géneros que hay en las películas del estudio
     generos_encontrados= [] # Se crea una lista vacia que almacenará los generos
+    
     # Se usarán los bucles "for" y ".iterrows()" para recorrer todas las filas del dataframe
     for i, fila in df.iterrows():
         t_genero = str(fila["Género"])  # Obtenemos todo el contenido de la columna "Genero" como un texto y lo guardamos en la variable texto_genero
         l_genero = t_genero.split(",")  # "split()" Separa el texto al encontrar una coma, eso facilitará el recorrido
-    # Se crea un bucle "for" esto para quitar espacios de cada fila de genero y depurar la lista
+        # Se crea un bucle "for" esto para quitar espacios de cada fila de genero y depurar la lista
         for genero in l_genero:
             l_genero_depurado = genero.strip().lower()
-            generos_encontrados.append(l_genero_depurado) # Se agrega la lusta depurada a la lista principal
+            generos_encontrados.append(l_genero_depurado) # Se agrega la lista depurada a la lista principal
+    
     gen_lista = sorted(set(generos_encontrados)) # Esto evita que los géneros no se repitan: "Set()"
    
     # INTERFAZ DE BÚSQUEDA POR GÉNERO
    
     # Para esto, usaremos la función "st.multiselect" la cuál permite crear menús desplegables o "droop"
+    
     generos_seleccionados = st.multiselect(
-            "",
-            gen_lista,  # De esta lista sacará los generos a mostrarse en el desplegable
-            max_selections=2, # La selección maxima será 2 géneros
-            accept_new_options=False  # Desactivamos la opcion de agregar nuevas opciones
-        )
+        "¿Cuáles son los géneros de tu preferencia?:",
+        gen_lista,                # De esta lista sacará los generos a mostrarse en el desplegable
+        max_selections=2,         # La selección maxima será 2 géneros
+        accept_new_options=False  # Desactivamos la opcion de agregar nuevas opciones
+    )
     st.markdown(f"Géneros seleccionados: {generos_seleccionados}") # Esto mostrará los géneros que seleccionó el usuario
 
     # BUSCADOR
-    encontrado = False   # Verifica si se hallaron resultados o no
-    for i in range(len(df)): # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
-        titulo_pelicula = df.loc[i, "Título"] # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
-        portada_pelicula = df.loc[i, "Portada"] # Accede al link de la imagen de portada correspondiente al nombre "titulo_pelicula" a la fila i.
-        generos= df.loc[i, "Género"] # Accede a los géneros, es el más importante del buscador.
-        col1,col2 = st.columns([1, 2])
-        with col1: st.markdown(f"""
-                <h4><i><b>{titulo_pelicula}</b></i></h4>
-                <ul>
-                    <li>Género: {generos}</li>
-                </ul>
-                """, unsafe_allow_html=True)
-        with col2: st.image(portada_pelicula, width=200)
-    # SISTEMA DE FILTRO
-    coincide_genero= True # El uso de la variable boleana ayudará a filtrar la película que corresponde con los generos seleccionados por el usuario.
-    for genero in generos_seleccionados: # Iteramos por cada género que el usuario haya seleccionado en el filtro de géneros.
-        if genero not in str(generos).lower(): # Si ese género seleccionado no está  en los géneros de la canción actual...
-            coincide_genero= False # la varible booleana coincide_generos será False
-            break # y es bucle se rompe.
-        if coincide_genero:  # Si la canción sí coincide con los géneros seleccionados…
-            st.markdown(f"## {titulo_pelicula}") # Mostramos el título de la canción en formato grande (##).
-            st.markdown(f"Álbum: *{album_cancion}* ({año_cancion})") # Mostramos el nombre del álbum en cursiva y el año entre paréntesis.
-                col1, col2 = st.columns([1, 2])  # Creamos dos columnas: la primera más pequeña para la portada y la segunda más grande para los botones de enlaces.
-                with col1: # En la columna izquierda mostramos la imagen de la canción. Se fija el ancho a 300 píxeles.
-                    st.image(portada_pelicula, width=300)
-                with col2: # En la otra columna...
-                    st.markdown(f"<a href='{link_spotify}' target='_blank'><button>🎧 Escuchar en Spotify</button></a>", unsafe_allow_html=True) # Se crea un botón HTML que lleva al link de Spotify en una nueva pestaña.                    
-                    st.markdown(f"<a href='{letras_cancion}' target='_blank'><button>📜 Ver Letra</button></a>", unsafe_allow_html=True) # Botón que abre la página con la letra de la canción.
-                    if df_discografia.loc[i, "Video Musical"] == "True": # Verificamos si esa canción tiene video musical ( si la columna "Video Musical" dice "True").
-                        st.markdown(f"<a href='{mv_cancion}' target='_blank'><button>🎬 Ver MV</button></a></div>", unsafe_allow_html=True) # Si sí tiene, mostramos el botón para ver el video musical.
-                    encontrado = True # Activa la variable booleana para marcar que sí hubo un resultado
     
-elif pagina_seleccionada == "Alcance":
-    st.markdown("Contenido")
-elif pagina_seleccionada == "Géneros":
-    st.markdown("Espacio")
+    encontrado = False   # Verifica si se hallaron resultados o no
+    
+    for i in range(len(df)):                       # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
+        titulo_pelicula = df.loc[i, "Título"]      # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
+        portada_pelicula = df.loc[i, "Portada"]    # Accede al link de la imagen de portada correspondiente al nombre "titulo_pelicula" a la fila i.
+        generos= df.loc[i, "Género"]               # Accede a los géneros, es el más importante del buscador.
+        director_pelicula = df.loc[i, "Director"]  # Accede al valor de la columna "Director" en la primera fila o "fila i" del dataframe
+        ano_pelicula = df.loc[i, "Año"]            # Accede al valor de la columna "Año" de la primera fila (fila i) en el Dataframe.
+        duracion_pelicula = df.loc[i, "Duración"]  # Accede al valor de la columna "Duración" de la primera fila (fila i) en el dataframe.
+        idioma_pelicula = df.loc[i, "Idioma"]      # Aaccede al valor de la columna "Idioma" de la primera fila del dataframe.
+    # SISTEMA DE FILTRO
+        
+        coincide_genero = True # El uso de la variable boleana ayudará a filtrar la película que corresponde con los generos seleccionados por el usuario.
+        for genero in generos_seleccionados: # Iteramos por cada género que el usuario haya seleccionado en el filtro de géneros.
+            if genero not in str(generos).lower(): # Si ese género seleccionado no está  en los géneros de la canción actual...
+                coincide_genero= False # la varible booleana coincide_generos será False
+                break # y es bucle se rompe.
+        if coincide_genero:  # Si la película sí coincide con los géneros seleccionados entonces se mostrará 
+            col1, col2 = st.columns([1, 2])  # Se crean columnas, para mejor orden y visualización de los resultados
+            with col1: # En la columna izquierda se muestra la imagen de la portada de la película.
+                    st.image(portada_pelicula, width=200)
+            with col2: # En la columna derecha se muestra la información como el título, año, director de la película y más
+                    st.markdown(f"## {titulo_pelicula} (*{ano_pelicula}*)") # Mostramos el título de la película, con el año entre parentesis y cursiva                   
+                    st.markdown(f"Director: {director_pelicula}") # Mostramos el nombre del director de la película
+                    st.markdown(f"Duración: {duracion_pelicula} minutos") # Mostramos la duración de la película en minutos
+                    st.markdown(f"Idioma: {idioma_pelicula}") # Mostramos el idioma de la película seleccionada
+                    #if df_discografia.loc[i, "Video Musical"] == "True": # Verificamos si esa canción tiene video musical ( si la columna "Video Musical" dice "True").
+                        #st.markdown(f"<a href='{mv_cancion}' target='_blank'><button>🎬 Ver MV</button></a></div>", unsafe_allow_html=True) # Si sí tiene, mostramos el botón para ver el video musical.
+                    encontrado = True # Activa la variable booleana para marcar que sí hubo un resultado
+    if not encontrado: # Si ninguna canción pasó los filtros de género y duración:
+        st.warning("No se encontraron películas de ese género")
+elif pagina_seleccionada == "Apartado Técnico":
+    st.markdown("¡Conoce acerca de datos de las películas del estudio! Datos como críticas, premios ganados, nominaciones, presupuestos, recaudaciones, popularidad y más (˶°ㅁ°)!! ")
+    st.markdown("---")
+    st.markdown("## Tabla general de Presupuesto vs Recaudación mundial por película")
+
+    #  LIMPIEZA DE DATOS 
+    # Se convierten los valores eliminando símbolos y comas
+    df["Presupuesto"] = (
+        df["Presupuesto"]
+        .astype(str)
+        .str.replace(",", "")
+        .astype(float)
+    )
+
+    df["Recaudación_mundial"] = (
+        df["Recaudación_mundial"]
+        .astype(str)
+        .str.replace(",", "")
+        .astype(float)
+    )
+
+    df_sorted = df.sort_values("Recaudación_mundial", ascending=False)
+
+    #  GRÁFICO DE PRESUPUESTO Y RECAUDACIÓN MUNDIAL
+    fig, ax = plt.subplots(figsize=(10, 7))
+    y = df_sorted["Título"]
+    presupuesto = df_sorted["Presupuesto"]
+    recaudacion = df_sorted["Recaudación_mundial"]
+
+    y_pos = np.arange(len(y))
+    height = 0.35  # separación entre barras
+
+    # Barras horizontales lado a lado
+    ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#B3DDEB")
+    ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#F7EABD")
+
+    # Estética
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y, fontsize=9)
+    ax.set_xlabel("Monto (USD)")
+    ax.set_title("Presupuesto vs Recaudación – Studio Ghibli")
+    ax.legend()
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    st.markdown("---")
+
+    # GRÁFICO DE FECHAS DE ESTRENO
+    # Conversión de fechas
+    df["Fecha_estreno"] = pd.to_datetime(df["Fecha_estreno"], errors="coerce")
+
+    # Función para asignar colores según tipo de estreno
+    def asignar_color(estreno):
+        estreno = str(estreno)
+        if "Festival" in estreno:
+            return "orange"
+        elif "Streaming" in estreno:
+            return "green"
+        elif "Internacional" in estreno:
+            return "blue"
+        else:
+            return "gray"
+
+    df["Color"] = df["Estreno"].apply(asignar_color)
+
+    # Ordenar por fecha de estreno
+    df = df.sort_values("Fecha_estreno").reset_index(drop=True)
+
+    # --- Crear el gráfico ---
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Scatter plot: fecha en x, índice en y
+    ax.scatter(df["Fecha_estreno"], df.index, s=120, c=df["Color"])
+
+    # Etiquetas en eje y con los títulos
+    ax.set_yticks(df.index)
+    ax.set_yticklabels(df["Título"], fontsize=9)
+
+    # Mejoras visuales
+    ax.set_xlabel("Fecha de Estreno")
+    ax.set_title("Timeline cronológico de estrenos - Studio Ghibli")
+    ax.grid(axis="x", linestyle="--", alpha=0.4)
+
+    legend_patches = [
+        mpatches.Patch(color="blue", label="Internacional"),
+        mpatches.Patch(color="green", label="Streaming"),
+        mpatches.Patch(color="orange", label="Festival"),
+        mpatches.Patch(color="gray", label="Otro / No clasificado")
+    ]
+
+    ax.legend(handles=legend_patches, title="Tipo de estreno", loc="upper left")
+
+    plt.tight_layout()
+    # Mostrar en Streamlit
+    st.pyplot(fig)
+
+elif pagina_seleccionada == "Apartado Artistico":
+    st.markdown("¡Conoce un poco más del arte de las películas del estudio!")
+    
+    #for i in range(len(df)): # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
+        #titulo_pelicula = df.loc[i, "Título"] # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
+        #portada_pelicula = df.loc[i, "Portada"] # Accede al link de la imagen de portada correspondiente al nombre "titulo_pelicula" a la fila i.
+        #tecnica_art = df.loc[i, "Técnica_usada"]
+        #paleta_art = df.loc[i, "Paleta_de_colores"] 
+        #estilo_art =df.loc[i, "Estilo_visual"]
+        #ambientacion_art = df.loc[i, "Ambientación"]
+        #with st.expander(f"🎨 Análisis artístico de {titulo_pelicula}"):
+            #st.markdown(f"**Técnica de animación:** {tecnica_art}")
+            #st.markdown(f"**Paleta de colores:** {paleta_art}")
+            #st.markdown(f"**Estilo visual:** {estilo_art}")
+            #st.markdown(f"**Ambientación:** {ambientacion_art}")
+    #  CONTROL DE SESIÓN 
+    if "pelicula_elegida" not in st.session_state:
+        st.session_state.pelicula_elegida = None
+    #  LISTA DE PELÍCULAS Y PORTADAS 
+    lista_peliculas = df["Título"].tolist()
+
+    # Diccionario: { título : url_portada } para que se muestre el título de la película junto con la portada
+    portadas = { df.loc[i,"Título"]: df.loc[i,"Portada"] for i in range(len(df)) }
+
+
+    #  SI NO SE HA ELEGIDO PELÍCULA: MOSTRAR MENÚ DE PORTADAS 
+    if st.session_state.pelicula_elegida is None:
+
+        st.markdown("## 🎨 Selecciona una película para ver su análisis artístico:")
+        cols = st.columns(4)  # Se mostrará la lista de películas en 4 columnas
+
+        for i, titulo in enumerate(lista_peliculas):
+            col = cols[i % 4]
+
+            with col:
+                st.image(portadas[titulo], use_container_width=True)
+                if st.button(titulo, key=titulo):
+                    st.session_state.pelicula_elegida = titulo
+                    st.rerun()
+
+    #  SI YA SE SELECCIONÓ UNA PELÍCULA: Se mostrará la tarjeta artistica 
+    else:
+        titulo = st.session_state.pelicula_elegida
+        datos = df[df["Título"] == titulo].iloc[0]
+
+        st.markdown(f"## 🎬 Análisis artístico de **{titulo}**")
+        col1, col2, col3= st.columns(3)
+        
+        with col1:
+            st.image(datos["Portada"], width=200)
+
+        with col2:
+            st.markdown("### 🎨 Técnica y Estilo")
+            st.markdown(f"**Técnica de animación:** {datos['Técnica_usada']}")
+            st.markdown(f"**Paleta de colores:** {datos['Paleta_de_colores']}")
+            st.markdown(f"**Estilo visual:** {datos['Estilo_visual']}")
+            st.markdown("### 🌄 Ambientación")
+            st.markdown(f"{datos['Ambientación']}")
+
+        with col3:
+            
+            banda = datos["Banda_sonora"]
+            banda_link = datos["Banda_link"]
+            link_banda = datos["link_banda_sonora"]
+
+            st.markdown("### 🎼 Banda sonora")
+            st.markdown(f"**Compositor:** {banda}")
+
+            if str(banda_link).lower() == "true" and pd.notna(link_banda):
+                st.markdown(f"[🎵 Escuchar banda sonora]({link_banda})")
+            else:
+                st.markdown("_No disponible en línea_")
+
+        st.markdown("---")
+        # BOTÓN PARA VOLVER
+        if st.button("Llevame de regreso al menú"):
+            st.session_state.pelicula_elegida = None
+            st.rerun()
+    st.markdown("---")
+    
+    #Ahora, prepararemos gráficos de frecuencias con variables como paleta de colores, tecnicas usadas, tipo de animación y ambientación
+    #  PREPARACIÓN DE DATOS (FRECUENCIA DE PALETAS)
+    # Se convierte todas las paletas a lista y se limpian
+    lista_colores = []
+
+    for paleta in df["Paleta_de_colores"]:
+        if pd.notna(paleta):
+            colores = [c.strip().lower() for c in paleta.split(",")]
+            lista_colores.extend(colores)
+
+    # Se cuenta la frecuencia de colores con counts()
+    conteo_colores = pd.Series(lista_colores).value_counts()
+
+    #  GRÁFICO (FRECUENCIA DE PALETAS)
+    st.markdown("## Frecuencia de colores más usados en las películas de Studio Ghibli")
+
+    fig, ax = plt.subplots(figsize=(12,6))
+    ax.bar(conteo_colores.index, conteo_colores.values, color="#80C7C9")
+    ax.set_xlabel("Colores y Tonos")
+    ax.set_ylabel("Frecuencia")
+    ax.set_title("Comparativa de paletas de color en Studio Ghibli")
+    plt.xticks(rotation=45)
+
+    st.pyplot(fig)
+
+    # GRÁFICO DE TIPO DE ANIMACIÓN
+
+    st.markdown("## Tipo de animación más usado en las películas de Studio Ghibli")
+
+    conteo_animacion = df["Tipo_de_animación"].value_counts()
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar(
+        conteo_animacion.index,
+        conteo_animacion.values,
+        color="#80C7C9"
+    )
+
+    ax.set_xlabel("Tipo de animación")
+    ax.set_ylabel("Cantidad de películas")
+    ax.set_title("Distribución de tipos de animación en Studio Ghibli")
+    plt.xticks(rotation=360)
+
+    st.pyplot(fig)
+
+    #GRÁFICOS DE TÉCNICA USADAS
+
+    st.markdown("## Técnicas más usadas en las películas de Studio Ghibli")
+
+    conteo_tecnica = df["Técnica_usada"].value_counts()
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar(
+        conteo_tecnica.index,
+        conteo_tecnica.values,
+        color="#80C7C9"
+    )
+
+    ax.set_xlabel("Técnica de animación")
+    ax.set_ylabel("Cantidad de películas")
+    ax.set_title("Frecuencia de técnicas utilizadas")
+    plt.xticks(rotation=45)
+
+    st.pyplot(fig)
+
+    # GRÁFICOS DE ESTILO VISUAL
+
+    st.markdown("## Frecuencia de estilo visual en las películas de Studio Ghibli")
+
+    estilos_expandidos = (
+    df["Estilo_visual"]
+    .str.lower()               # Convierte todo a minusculas
+    .str.split(",")            # separa por coma
+    .explode()                 # crea una fila por cada estilo
+    .str.strip()               # elimina espacios
+    )
+    conteo_estilo = estilos_expandidos.value_counts()
+
+    plt.figure(figsize=(10,6))
+    conteo_estilo.plot(kind="bar", color="#80C7C9")   # color personalizado
+    plt.title("Frecuencia de estilos visuales en Studio Ghibli")
+    plt.xlabel("Estilo visual")
+    plt.ylabel("Cantidad")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    st.pyplot(plt)
 else:
     st.markdown("Contenido")
