@@ -186,6 +186,7 @@ elif pagina_seleccionada == "Apartado Técnico":
     st.markdown("---")
 
     # GRÁFICO DE FECHAS DE ESTRENO
+    st.markdown("## Línea de tiempo cronológica de fechas de estreno de películas Ghibli")
     # Conversión de fechas
     df["Fecha_estreno"] = pd.to_datetime(df["Fecha_estreno"], errors="coerce")
 
