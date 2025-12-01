@@ -74,7 +74,7 @@ elif pagina_seleccionada == "Explora":
     """, unsafe_allow_html=True)
     # Prepararemos una búsqueda por filtros
     
-    st.markdown("<h2 style='text-align: center;'>POR GÉNERO</h2>", unsafe_allow_html=True)
+    # st.markdown("<h2 style='text-align: center;'>POR GÉNERO</h2>", unsafe_allow_html=True)
 
     # BÚSQUEDA POR GÉNERO
 
@@ -138,6 +138,7 @@ elif pagina_seleccionada == "Explora":
     if not encontrado: # Si ninguna canción pasó los filtros de género y duración:
         st.warning("No se encontraron películas de ese género")
 elif pagina_seleccionada == "Apartado Técnico":
+    st.markdown("<h1 style='text-align: center;'>APARTADO TÉCNICO</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezadp del apartado
     st.markdown("¡Conoce acerca de datos de las películas del estudio! Datos como críticas, premios ganados, nominaciones, presupuestos, recaudaciones, popularidad y más (˶°ㅁ°)!! ")
     st.markdown("---")
     st.markdown("## Tabla general de Presupuesto vs Recaudación mundial por película")
@@ -170,8 +171,8 @@ elif pagina_seleccionada == "Apartado Técnico":
     height = 0.35  # separación entre barras
 
     # Barras horizontales lado a lado
-    ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#B3DDEB")
-    ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#F7EABD")
+    ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#CEC917")
+    ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#58A449")
 
     # Estética
     ax.set_yticks(y_pos)
@@ -182,6 +183,71 @@ elif pagina_seleccionada == "Apartado Técnico":
 
     plt.tight_layout()
     st.pyplot(fig)
+
+    #  SECCIÓN DE COMPARACIÓN DE PRESUPUESTO Y RECAUDACIÓN 
+    
+    df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
+    
+    st.markdown("## Comparación de Presupuesto y Recaudación entre Películas")
+
+    # Selección de dos películas
+    peliculas = df["Titulo_Año"].unique()
+
+    seleccion = st.multiselect(
+        "Selecciona dos películas:",
+        peliculas,
+        max_selections=2,
+        key="presupuesto_comp"
+    )
+
+    if len(seleccion) != 2:
+        st.info("Selecciona exactamente **dos** películas para comparar.")
+    else:
+
+    # Recuperar los títulos limpios sin año
+        peli1_titulo = seleccion[0].split(" (")[0]
+        peli2_titulo = seleccion[1].split(" (")[0]
+
+        # Filtrar dataframe
+        df_comp = df[df["Título"].isin([peli1_titulo, peli2_titulo])]
+
+        # Obtener valores
+        pelis_con_ano = df_comp["Titulo_Año"].tolist()
+        presupuesto = df_comp["Presupuesto"].tolist()
+        recaudacion = df_comp["Recaudación_mundial"].tolist()
+
+        # Crear gráfico horizontal como el general
+        fig, ax = plt.subplots(figsize=(8, 5))
+
+        y_pos = np.arange(len(pelis_con_ano))
+        height = 0.35
+
+        ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#CEC917")
+        ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#58A449")
+
+        # Etiquetas y estética
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(pelis_con_ano, fontsize=10)
+        ax.set_xlabel("Monto (USD)")
+        ax.set_title("Comparación de Presupuesto y Recaudación")
+        ax.legend()
+
+        plt.tight_layout()
+        st.pyplot(fig)
+
+        # Mostrar valores numéricos (opcional)
+        colA, colB = st.columns(2)
+
+        with colA:
+            st.write(f"### {pelis_con_ano[0]}")
+            st.write(f"**Presupuesto:** ${presupuesto[0]:,}")
+            st.write(f"**Recaudación:** ${recaudacion[0]:,}")
+
+        with colB:
+            st.write(f"### {pelis_con_ano[1]}")
+            st.write(f"**Presupuesto:** ${presupuesto[1]:,}")
+            st.write(f"**Recaudación:** ${recaudacion[1]:,}")
+
 
     st.markdown("---")
 
@@ -194,11 +260,11 @@ elif pagina_seleccionada == "Apartado Técnico":
     def asignar_color(estreno):
         estreno = str(estreno)
         if "Festival" in estreno:
-            return "orange"
+            return "#CEC917"
         elif "Streaming" in estreno:
-            return "green"
+            return "#58A449"
         elif "Internacional" in estreno:
-            return "blue"
+            return "#2C715F"
         else:
             return "gray"
 
@@ -223,9 +289,9 @@ elif pagina_seleccionada == "Apartado Técnico":
     ax.grid(axis="x", linestyle="--", alpha=0.4)
 
     legend_patches = [
-        mpatches.Patch(color="blue", label="Internacional"),
-        mpatches.Patch(color="green", label="Streaming"),
-        mpatches.Patch(color="orange", label="Festival"),
+        mpatches.Patch(color="#2C715F", label="Internacional"),
+        mpatches.Patch(color="#58A449", label="Streaming"),
+        mpatches.Patch(color="#CEC917", label="Festival"),
         mpatches.Patch(color="gray", label="Otro / No clasificado")
     ]
 
@@ -235,8 +301,117 @@ elif pagina_seleccionada == "Apartado Técnico":
     # Mostrar en Streamlit
     st.pyplot(fig)
 
-elif pagina_seleccionada == "Apartado Artistico":
-    st.markdown("¡Conoce un poco más del arte de las películas del estudio!")
+    st.markdown("---")
+
+    # HERRAMIENTA DE COMPARACIÓN DE PREMIOS Y NOMINACIONES
+    # Crearemos una herramienta en la cuál el usuario podrá elegir dos películas y comparar el número de premios y nominaciones que ambas obtuvieron.
+    st.markdown("## Comparación de Premios y Nominaciones por cada película")
+    st.markdown("""
+    ¿Deseas saber cuántos premios y/o nominaciones obtuvo una película? Selecciona dos películas al azar y obtén los resultados de cada una.
+                """)
+    
+    peliculas = df["Titulo_Año"].unique()
+
+    # SELECCIÓN MÚLTIPLE 
+    seleccion = st.multiselect(
+        "Selecciona dos películas:",
+        peliculas,
+        max_selections=2
+    )
+
+    # Si no hay exactamente dos, no continuar
+    if len(seleccion) != 2:
+        st.info("Por favor selecciona **exactamente dos** películas para realizar la comparación.")
+    else:
+
+        peli1, peli2 = seleccion
+
+        # EXTRAER SOLO EL TÍTULO REAL (sin el año)
+        titulo1 = peli1.split(" (")[0]
+        titulo2 = peli2.split(" (")[0]
+
+        # EXTRAER LA FILA CORRECTA DEL DATAFRAME
+        data1 = df[df["Título"] == titulo1].iloc[0]
+        data2 = df[df["Título"] == titulo2].iloc[0]
+
+        # MOSTRAR LAS DOS PELÍCULAS LADO A LADO
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.header(peli1)
+            st.image(data1["Portada"], width=250)
+            st.markdown(f"**Premios ganados:** {data1['Premios_ganados']}")
+            st.markdown(f"**Nominaciones:** {data1['Nominaciones']}")
+
+        with col2:
+            st.header(peli2)
+            st.image(data2["Portada"], width=250)
+            st.markdown(f"**Premios ganados:** {data2['Premios_ganados']}")
+            st.markdown(f"**Nominaciones:** {data2['Nominaciones']}")
+
+        # GRÁFICO COMPARATIVO
+        fig, ax = plt.subplots(figsize=(7, 4))
+
+        ax.bar(
+            [peli1, peli2],
+            [data1["Premios_ganados"], data2["Premios_ganados"]],
+            label="Premios ganados",
+            color="#CEC917"
+        )
+        ax.bar(
+            [peli1, peli2],
+            [data1["Nominaciones"], data2["Nominaciones"]],
+            bottom=[data1["Premios_ganados"], data2["Premios_ganados"]],
+            label="Nominaciones",
+            color="#58A449"
+        )
+
+        ax.set_ylabel("Cantidad total")
+        ax.set_title("Comparación de Premios y Nominaciones")
+        ax.legend()
+
+        st.pyplot(fig)
+
+        # DETALLE DE PREMIOS Y NOMINACIONES
+        st.subheader("Detalle de Premios y Nominaciones")
+
+        colL, colR = st.columns(2)
+
+        with colL:
+            st.write(f"### {peli1}")
+            st.write("**Premios:**")
+            if data1["Premios_nom"]:
+                for p in data1["Premios_nom"].split(","):
+                    st.write("- " + p.strip())
+            else:
+                st.write("No disponible")
+
+            st.write("**Nominaciones:**")
+            if data1["Nomi_nom"]:
+                for n in data1["Nomi_nom"].split(","):
+                    st.write("- " + n.strip())
+            else:
+                st.write("No disponible")
+
+        with colR:
+            st.write(f"### {peli2}")
+            st.write("**Premios:**")
+            if data2["Premios_nom"]:
+                for p in data2["Premios_nom"].split(","):
+                    st.write("- " + p.strip())
+            else:
+                st.write("No disponible")
+
+            st.write("**Nominaciones:**")
+            if data2["Nomi_nom"]:
+                for n in data2["Nomi_nom"].split(","):
+                    st.write("- " + n.strip())
+            else:
+                st.write("No disponible")
+
+elif pagina_seleccionada == "Apartado Artistico":                             # Si el usuario selecciona la opción Apartado Artistico
+    st.markdown("<h1 style='text-align: center;'>APARTADO ARTISTICO</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezado del apartado
+    st.markdown("¡Conoce un poco más del arte de las películas del estudio!") # Entonces mostrará un mensaje que le da la bienvenida 
     
     #for i in range(len(df)): # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
         #titulo_pelicula = df.loc[i, "Título"] # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
@@ -263,7 +438,7 @@ elif pagina_seleccionada == "Apartado Artistico":
     #  SI NO SE HA ELEGIDO PELÍCULA: MOSTRAR MENÚ DE PORTADAS 
     if st.session_state.pelicula_elegida is None:
 
-        st.markdown("## 🎨 Selecciona una película para ver su análisis artístico:")
+        st.markdown("<h3 style='text-align: left;'> 🎨 Selecciona una película para ver su análisis artístico:</h3>", unsafe_allow_html=True)
         cols = st.columns(4)  # Se mostrará la lista de películas en 4 columnas
 
         for i, titulo in enumerate(lista_peliculas):
@@ -332,7 +507,7 @@ elif pagina_seleccionada == "Apartado Artistico":
     st.markdown("## Frecuencia de colores más usados en las películas de Studio Ghibli")
 
     fig, ax = plt.subplots(figsize=(12,6))
-    ax.bar(conteo_colores.index, conteo_colores.values, color="#80C7C9")
+    ax.bar(conteo_colores.index, conteo_colores.values, color="#2C715F")
     ax.set_xlabel("Colores y Tonos")
     ax.set_ylabel("Frecuencia")
     ax.set_title("Comparativa de paletas de color en Studio Ghibli")
@@ -350,7 +525,7 @@ elif pagina_seleccionada == "Apartado Artistico":
     ax.bar(
         conteo_animacion.index,
         conteo_animacion.values,
-        color="#80C7C9"
+        color="#2C715F"
     )
 
     ax.set_xlabel("Tipo de animación")
@@ -370,7 +545,7 @@ elif pagina_seleccionada == "Apartado Artistico":
     ax.bar(
         conteo_tecnica.index,
         conteo_tecnica.values,
-        color="#80C7C9"
+        color="#2C715F"
     )
 
     ax.set_xlabel("Técnica de animación")
@@ -394,7 +569,7 @@ elif pagina_seleccionada == "Apartado Artistico":
     conteo_estilo = estilos_expandidos.value_counts()
 
     plt.figure(figsize=(10,6))
-    conteo_estilo.plot(kind="bar", color="#80C7C9")   # color personalizado
+    conteo_estilo.plot(kind="bar", color="#2C715F")   # color personalizado
     plt.title("Frecuencia de estilos visuales en Studio Ghibli")
     plt.xlabel("Estilo visual")
     plt.ylabel("Cantidad")
