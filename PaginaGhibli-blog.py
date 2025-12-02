@@ -116,6 +116,7 @@ elif pagina_seleccionada == "Explora":
         ano_pelicula = df.loc[i, "Año"]            # Accede al valor de la columna "Año" de la primera fila (fila i) en el Dataframe.
         duracion_pelicula = df.loc[i, "Duración"]  # Accede al valor de la columna "Duración" de la primera fila (fila i) en el dataframe.
         idioma_pelicula = df.loc[i, "Idioma"]      # Aaccede al valor de la columna "Idioma" de la primera fila del dataframe.
+        clas_pelicula = df.loc[i, "Clasificación"] # Accede al valor de la columna "Clasificación" de la primera fila del dataframe.
     # SISTEMA DE FILTRO
         
         coincide_genero = True # El uso de la variable boleana ayudará a filtrar la película que corresponde con los generos seleccionados por el usuario.
@@ -132,7 +133,7 @@ elif pagina_seleccionada == "Explora":
                     st.markdown(f"Director: {director_pelicula}") # Mostramos el nombre del director de la película
                     st.markdown(f"Duración: {duracion_pelicula} minutos") # Mostramos la duración de la película en minutos
                     st.markdown(f"Idioma: {idioma_pelicula}") # Mostramos el idioma de la película seleccionada
-                    #if df_discografia.loc[i, "Video Musical"] == "True": # Verificamos si esa canción tiene video musical ( si la columna "Video Musical" dice "True").
+                    st.markdown(f"Clasificación: {clas_pelicula}") # Mostramos la clasificación de la película seleccionada
                         #st.markdown(f"<a href='{mv_cancion}' target='_blank'><button>🎬 Ver MV</button></a></div>", unsafe_allow_html=True) # Si sí tiene, mostramos el botón para ver el video musical.
                     encontrado = True # Activa la variable booleana para marcar que sí hubo un resultado
     if not encontrado: # Si ninguna canción pasó los filtros de género y duración:
@@ -141,6 +142,68 @@ elif pagina_seleccionada == "Apartado Técnico":
     st.markdown("<h1 style='text-align: center;'>APARTADO TÉCNICO</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezadp del apartado
     st.markdown("¡Conoce acerca de datos de las películas del estudio! Datos como críticas, premios ganados, nominaciones, presupuestos, recaudaciones, popularidad y más (˶°ㅁ°)!! ")
     st.markdown("---")
+    
+    #  CONTROL DE SESIÓN 
+    if "pelicula_elegida" not in st.session_state:
+        st.session_state.pelicula_elegida = None
+    #  LISTA DE PELÍCULAS Y PORTADAS 
+    lista_peliculas = df["Título"].tolist()
+
+    # Diccionario: { título : url_portada } para que se muestre el título de la película junto con la portada
+    portadas1 = { df.loc[i,"Título"]: df.loc[i,"Portada"] for i in range(len(df)) }
+
+
+    #  SI NO SE HA ELEGIDO PELÍCULA: MOSTRAR MENÚ DE PORTADAS 
+    if st.session_state.pelicula_elegida is None:
+
+        st.markdown("<h3 style='text-align: left;'> Selecciona una película para conocer más detalles de esta:</h3>", unsafe_allow_html=True)
+        cols = st.columns(4)  # Se mostrará la lista de películas en 4 columnas
+
+        for i, titulo in enumerate(lista_peliculas):
+            col = cols[i % 4]
+
+            with col:
+                st.image(portadas1[titulo], use_container_width=True)
+                if st.button(titulo, key=titulo):
+                    st.session_state.pelicula_elegida = titulo
+                    st.rerun()
+
+    #  SI YA SE SELECCIONÓ UNA PELÍCULA: Se mostrará la tarjeta técnica 
+    else:
+        titulo = st.session_state.pelicula_elegida
+        datos = df[df["Título"] == titulo].iloc[0]
+
+        st.markdown(f"## 🎬 Detalles técnicos de **{titulo}**")
+        col1, col2, col3= st.columns(3)
+        
+        with col1:
+            st.image(datos["Portada"], width=200)
+
+        with col2:
+            st.markdown(f"**Dirigido por:** {datos['Director']}")
+            st.markdown(f"**Presupuesto:** {datos['Presupuesto']} USD")
+            st.markdown(f"**Recaudación Mundial:** {datos['Recaudación_mundial']} USD")
+            st.markdown(f"**Fecha de estreno:** {datos['Fecha_estreno']}")
+            st.markdown(f"**Tipo de estreno:** {datos['Estreno']}")
+            st.markdown(f"**Estudio/s a cargo:** {datos['Estudio']}")
+            st.markdown(f"**Distribuido por:** {datos['Distribuidora']}")
+
+        with col3:
+            st.markdown(f"**Premios Ganados**")
+            st.markdown(f"*{datos['Premios_ganados']}* | {datos['Premios_nom']}")
+            st.markdown(f"**Nominaciones**")
+            st.markdown(f"*{datos['Nominaciones']}* | {datos['Nomi_nom']}")
+            st.markdown(f"**Reseña del público japonés:** {datos['Opinión_Japón']}")
+            st.markdown(f"**Puntuación (IMDb):** {datos['Crítica_IMDb']}")
+
+            
+
+        st.markdown("---")
+        # BOTÓN PARA VOLVER
+        if st.button("Llevame de regreso al menú"):
+            st.session_state.pelicula_elegida = None
+            st.rerun()
+
     st.markdown("## Tabla general de Presupuesto vs Recaudación mundial por película")
 
     #  LIMPIEZA DE DATOS 
@@ -184,72 +247,6 @@ elif pagina_seleccionada == "Apartado Técnico":
     plt.tight_layout()
     st.pyplot(fig)
 
-    #  SECCIÓN DE COMPARACIÓN DE PRESUPUESTO Y RECAUDACIÓN 
-    
-    df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
-    
-    st.markdown("## Comparación de Presupuesto y Recaudación entre Películas")
-
-    # Selección de dos películas
-    peliculas = df["Titulo_Año"].unique()
-
-    seleccion = st.multiselect(
-        "Selecciona dos películas:",
-        peliculas,
-        max_selections=2,
-        key="presupuesto_comp"
-    )
-
-    if len(seleccion) != 2:
-        st.info("Selecciona exactamente **dos** películas para comparar.")
-    else:
-
-    # Recuperar los títulos limpios sin año
-        peli1_titulo = seleccion[0].split(" (")[0]
-        peli2_titulo = seleccion[1].split(" (")[0]
-
-        # Filtrar dataframe
-        df_comp = df[df["Título"].isin([peli1_titulo, peli2_titulo])]
-
-        # Obtener valores
-        pelis_con_ano = df_comp["Titulo_Año"].tolist()
-        presupuesto = df_comp["Presupuesto"].tolist()
-        recaudacion = df_comp["Recaudación_mundial"].tolist()
-
-        # Crear gráfico horizontal como el general
-        fig, ax = plt.subplots(figsize=(8, 5))
-
-        y_pos = np.arange(len(pelis_con_ano))
-        height = 0.35
-
-        ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#CEC917")
-        ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#58A449")
-
-        # Etiquetas y estética
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(pelis_con_ano, fontsize=10)
-        ax.set_xlabel("Monto (USD)")
-        ax.set_title("Comparación de Presupuesto y Recaudación")
-        ax.legend()
-
-        plt.tight_layout()
-        st.pyplot(fig)
-
-        # Mostrar valores numéricos (opcional)
-        colA, colB = st.columns(2)
-
-        with colA:
-            st.write(f"### {pelis_con_ano[0]}")
-            st.write(f"**Presupuesto:** ${presupuesto[0]:,}")
-            st.write(f"**Recaudación:** ${recaudacion[0]:,}")
-
-        with colB:
-            st.write(f"### {pelis_con_ano[1]}")
-            st.write(f"**Presupuesto:** ${presupuesto[1]:,}")
-            st.write(f"**Recaudación:** ${recaudacion[1]:,}")
-
-
-    st.markdown("---")
 
     # GRÁFICO DE FECHAS DE ESTRENO
     st.markdown("## Línea de tiempo cronológica de fechas de estreno de películas Ghibli")
@@ -301,130 +298,144 @@ elif pagina_seleccionada == "Apartado Técnico":
     # Mostrar en Streamlit
     st.pyplot(fig)
 
-    st.markdown("---")
+    #==============================================
+    #       CONTEO DE PREMIOS Y NOMINACIONES
+    #==============================================
+    # Calcular totales
+    total_nominaciones = df["Nominaciones"].sum()
+    total_premios = df["Premios_ganados"].sum()
+    df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
 
-    # HERRAMIENTA DE COMPARACIÓN DE PREMIOS Y NOMINACIONES
-    # Crearemos una herramienta en la cuál el usuario podrá elegir dos películas y comparar el número de premios y nominaciones que ambas obtuvieron.
-    st.markdown("## Comparación de Premios y Nominaciones por cada película")
-    st.markdown("""
-    ¿Deseas saber cuántos premios y/o nominaciones obtuvo una película? Selecciona dos películas al azar y obtén los resultados de cada una.
-                """)
+
+    # Crear dataframe para graficar
+    df_premios = pd.DataFrame({
+        "Categoria": ["Nominaciones", "Premios ganados"],
+        "Cantidad": [total_nominaciones, total_premios]
+    })
+
+    # Gráfico de barras
+    st.markdown("## Nominaciones y Premios Totales del Estudio")
+
+    fig, ax = plt.subplots(figsize=(6,4))
+    ax.bar(df_premios["Categoria"], df_premios["Cantidad"], color= "#CEC917")
+    ax.set_ylabel("Cantidad Total")
+    ax.set_title("Total de Nominaciones y Premios Ganados")
+
+    st.pyplot(fig)
+
+    with st.expander("Ver películas según premios y nominaciones"):
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        # Subconjuntos
+        con_premios = df[df["Premios_ganados"] > 0]["Titulo_Año"].tolist()
+        sin_premios = df[df["Premios_ganados"] == 0]["Titulo_Año"].tolist()
+
+        con_nominaciones = df[df["Nominaciones"] > 0]["Titulo_Año"].tolist()
+        sin_nominaciones = df[df["Nominaciones"] == 0]["Titulo_Año"].tolist()
+
+        #  Columna 1: Con Premios 
+        with col1:
+            st.markdown("### 🏆 Con Premios")
+            if con_premios:
+                for t in con_premios:
+                    st.markdown(f"- {t}")
+            else:
+                st.write("Ninguna")
+
+        #  Columna 2: Sin Premios 
+        with col2:
+            st.markdown("### ❌ Sin Premios")
+            if sin_premios:
+                for t in sin_premios:
+                    st.markdown(f"- {t}")
+            else:
+                st.write("Ninguna")
+
+        #  Columna 3: Con Nominaciones 
+        with col3:
+            st.markdown("### 🎬 Con Nominaciones")
+            if con_nominaciones:
+                for t in con_nominaciones:
+                    st.markdown(f"- {t}")
+            else:
+                st.write("Ninguna")
+
+        #  Columna 4: Sin Nominaciones 
+        with col4:
+            st.markdown("### ❌ Sin Nominaciones")
+            if sin_nominaciones:
+                for t in sin_nominaciones:
+                    st.markdown(f"- {t}")
+            else:
+                st.write("Ninguna")
+
+
+    #  AGRUPACIÓN DE PELÍCULAS POR RANGOS IMDb
+
+    st.markdown("## Agrupación de películas por rangos de puntuación IMDb")
+
+    # Crear los rangos (bins)
+    bins = [0, 6, 7, 8, 9, 10]
+    labels = ["0–6", "6–7", "7–8", "8–9", "9–10"]
+
+    df["IMDb_rango"] = pd.cut(df["Crítica_IMDb"], bins=bins, labels=labels, include_lowest=True)
+
+    # Contar cuántas películas hay por rango
+    tabla_rangos = df.groupby("IMDb_rango")["Título"].count().reset_index()
+    tabla_rangos.columns = ["Rango IMDb", "Cantidad de Películas"]
     
-    peliculas = df["Titulo_Año"].unique()
+    #======================================
+    #  GRÁFICO DE BARRAS POR RANGOS IMDb
+    # =====================================
+    st.markdown("### Gráfico: Cantidad de películas por rango IMDb")
 
-    # SELECCIÓN MÚLTIPLE 
-    seleccion = st.multiselect(
-        "Selecciona dos películas:",
-        peliculas,
-        max_selections=2
+    # Crear figura
+    fig, ax = plt.subplots(figsize=(7, 3))
+
+    ax.bar(
+        tabla_rangos["Rango IMDb"],
+        tabla_rangos["Cantidad de Películas"],
+        color="#58A449",   # verde ghibli
+        alpha=0.9
     )
 
-    # Si no hay exactamente dos, no continuar
-    if len(seleccion) != 2:
-        st.info("Por favor selecciona **exactamente dos** películas para realizar la comparación.")
-    else:
+        # Etiquetas
+    ax.set_xlabel("Rango de Puntuación IMDb")
+    ax.set_ylabel("Cantidad de Películas")
+    ax.set_title("Distribución de películas según su puntuación IMDb")
 
-        peli1, peli2 = seleccion
+        # Mostrar conteo encima de cada barra
+    for i, val in enumerate(tabla_rangos["Cantidad de Películas"]):
+        ax.text(i, val + 0.1, str(val), ha='center')
 
-        # EXTRAER SOLO EL TÍTULO REAL (sin el año)
-        titulo1 = peli1.split(" (")[0]
-        titulo2 = peli2.split(" (")[0]
+    plt.tight_layout()
+    st.pyplot(fig)
 
-        # EXTRAER LA FILA CORRECTA DEL DATAFRAME
-        data1 = df[df["Título"] == titulo1].iloc[0]
-        data2 = df[df["Título"] == titulo2].iloc[0]
+    # Muestran los títulos dentro de cada rango
+    with st.expander("Ver títulos por rango"): # .expander creará una especie de etiqueta desplegable...
 
-        # MOSTRAR LAS DOS PELÍCULAS LADO A LADO
-        col1, col2 = st.columns(2)
+        # En la cuál se crean 4 columnas
+        col1, col2, col3, col4, col5 = st.columns(5) # Cinco columnas para los cinco rangos de puntuación
 
-        with col1:
-            st.header(peli1)
-            st.image(data1["Portada"], width=250)
-            st.markdown(f"**Premios ganados:** {data1['Premios_ganados']}")
-            st.markdown(f"**Nominaciones:** {data1['Nominaciones']}")
+        columnas = [col1, col2, col3, col4, col5]    # Se agruparan en forma de lista en 'columnas'
 
-        with col2:
-            st.header(peli2)
-            st.image(data2["Portada"], width=250)
-            st.markdown(f"**Premios ganados:** {data2['Premios_ganados']}")
-            st.markdown(f"**Nominaciones:** {data2['Nominaciones']}")
+        # Por cada columna, secorre los rangos y se asignan a cada columna
+        for col, rango in zip(columnas, labels):
+            with col:
+                st.markdown(f"### {rango}")          # En cada columna irá el titulo del rango que pertenencen
+                subset = df[df["IMDb_rango"] == rango]["Titulo_Año"].tolist()
 
-        # GRÁFICO COMPARATIVO
-        fig, ax = plt.subplots(figsize=(7, 4))
-
-        ax.bar(
-            [peli1, peli2],
-            [data1["Premios_ganados"], data2["Premios_ganados"]],
-            label="Premios ganados",
-            color="#CEC917"
-        )
-        ax.bar(
-            [peli1, peli2],
-            [data1["Nominaciones"], data2["Nominaciones"]],
-            bottom=[data1["Premios_ganados"], data2["Premios_ganados"]],
-            label="Nominaciones",
-            color="#58A449"
-        )
-
-        ax.set_ylabel("Cantidad total")
-        ax.set_title("Comparación de Premios y Nominaciones")
-        ax.legend()
-
-        st.pyplot(fig)
-
-        # DETALLE DE PREMIOS Y NOMINACIONES
-        st.subheader("Detalle de Premios y Nominaciones")
-
-        colL, colR = st.columns(2)
-
-        with colL:
-            st.write(f"### {peli1}")
-            st.write("**Premios:**")
-            if data1["Premios_nom"]:
-                for p in data1["Premios_nom"].split(","):
-                    st.write("- " + p.strip())
-            else:
-                st.write("No disponible")
-
-            st.write("**Nominaciones:**")
-            if data1["Nomi_nom"]:
-                for n in data1["Nomi_nom"].split(","):
-                    st.write("- " + n.strip())
-            else:
-                st.write("No disponible")
-
-        with colR:
-            st.write(f"### {peli2}")
-            st.write("**Premios:**")
-            if data2["Premios_nom"]:
-                for p in data2["Premios_nom"].split(","):
-                    st.write("- " + p.strip())
-            else:
-                st.write("No disponible")
-
-            st.write("**Nominaciones:**")
-            if data2["Nomi_nom"]:
-                for n in data2["Nomi_nom"].split(","):
-                    st.write("- " + n.strip())
-            else:
-                st.write("No disponible")
+                if len(subset) > 0:                  # Si la puntuación corresponde a mayor que cero, entonces...
+                    for titulo in subset:            # Para cada titulo que encuentren...
+                        st.markdown(f"<p style='font-size:14px'>{titulo}</p>", unsafe_allow_html=True) # Se ejecutará el nombre de la película que corresponda en la columna 
+                else:                                 # De lo contrario, se ejecutará el mensaje 
+                    st.markdown("Sin películas")        # "Sin películas"
 
 elif pagina_seleccionada == "Apartado Artistico":                             # Si el usuario selecciona la opción Apartado Artistico
-    st.markdown("<h1 style='text-align: center;'>APARTADO ARTISTICO</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezado del apartado
+    st.markdown("<h1 style='text-align: center;'>APARTADO ARTISTICO</h1>", unsafe_allow_html=True) # Agrega otro st. markdown para el encabezado del apartado
     st.markdown("¡Conoce un poco más del arte de las películas del estudio!") # Entonces mostrará un mensaje que le da la bienvenida 
     
-    #for i in range(len(df)): # Un bucle que recorre cada fila del DataFrame "range(len(name.xslx))"
-        #titulo_pelicula = df.loc[i, "Título"] # Accede al valor de la columna "titulo" en la primera fila o "fila i" del DataFrame.
-        #portada_pelicula = df.loc[i, "Portada"] # Accede al link de la imagen de portada correspondiente al nombre "titulo_pelicula" a la fila i.
-        #tecnica_art = df.loc[i, "Técnica_usada"]
-        #paleta_art = df.loc[i, "Paleta_de_colores"] 
-        #estilo_art =df.loc[i, "Estilo_visual"]
-        #ambientacion_art = df.loc[i, "Ambientación"]
-        #with st.expander(f"🎨 Análisis artístico de {titulo_pelicula}"):
-            #st.markdown(f"**Técnica de animación:** {tecnica_art}")
-            #st.markdown(f"**Paleta de colores:** {paleta_art}")
-            #st.markdown(f"**Estilo visual:** {estilo_art}")
-            #st.markdown(f"**Ambientación:** {ambientacion_art}")
     #  CONTROL DE SESIÓN 
     if "pelicula_elegida" not in st.session_state:
         st.session_state.pelicula_elegida = None
@@ -462,11 +473,11 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
             st.image(datos["Portada"], width=200)
 
         with col2:
-            st.markdown("### 🎨 Técnica y Estilo")
+            st.markdown("### Técnica y Estilo")
             st.markdown(f"**Técnica de animación:** {datos['Técnica_usada']}")
             st.markdown(f"**Paleta de colores:** {datos['Paleta_de_colores']}")
             st.markdown(f"**Estilo visual:** {datos['Estilo_visual']}")
-            st.markdown("### 🌄 Ambientación")
+            st.markdown("### Ambientación")
             st.markdown(f"{datos['Ambientación']}")
 
         with col3:
@@ -475,7 +486,9 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
             banda_link = datos["Banda_link"]
             link_banda = datos["link_banda_sonora"]
 
-            st.markdown("### 🎼 Banda sonora")
+            st.markdown("### Frase conocida")
+            st.markdown(f"*{datos['Frase']}*")
+            st.markdown("### Banda sonora")
             st.markdown(f"**Compositor:** {banda}")
 
             if str(banda_link).lower() == "true" and pd.notna(link_banda):
@@ -488,7 +501,6 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
         if st.button("Llevame de regreso al menú"):
             st.session_state.pelicula_elegida = None
             st.rerun()
-    st.markdown("---")
     
     #Ahora, prepararemos gráficos de frecuencias con variables como paleta de colores, tecnicas usadas, tipo de animación y ambientación
     #  PREPARACIÓN DE DATOS (FRECUENCIA DE PALETAS)
@@ -577,5 +589,148 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
     plt.tight_layout()
 
     st.pyplot(plt)
+
 else:
-    st.markdown("Contenido")
+    st.markdown("<h1 style='text-align: center;'>CURIOSIDADES Y MÁS</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezado del apartado
+    # Escribimos un mensaje de Bienvenida y que explique de que trata el apartado
+    st.markdown("""
+    <div style='font-size: 20px;'> <p>¡Bienvenido/a a la sección de curiosidades y más!</p>
+    <p> Aquí podrás divertirte un rato mientras pones a prueba tu conocimiento acerca de la filmografía de este estudio.</p> 
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
+
+    st.markdown("""<h2 div style='text-align: center;'>Datos Curiosos</div></h2>""", unsafe_allow_html=True)
+    st.markdown("Dale click al botón de 'Dame un dato curioso' para obtener un dato curioso de alguna película del estudio.")
+
+    if st.button("Dame un dato curioso 🤓"):
+        fila = df.sample(1).iloc[0]
+
+        plantillas = [
+            f"La película **{fila['Titulo_Año']}** tiene una calificación de **{fila['Crítica_IMDb']} en IMDb**.",
+            f"¿Sabías que **{fila['Titulo_Año']}** ganó **{fila['Premios_ganados']} premios**?",
+            f"**{fila['Titulo_Año']}** fue nominada a **{fila['Nominaciones']} premios**.",
+            f"En Japón, la popularidad de **{fila['Titulo_Año']}** fue considerada **{fila['Popularidad_Japón']}**.",
+            f"La recaudación mundial de **{fila['Titulo_Año']}** alcanzó los **${fila['Recaudación_mundial']:,}**.",
+            "La película mejor puntuada en IMDb fue: " + df.loc[df["Crítica_IMDb"].idxmax(), "Titulo_Año"],
+            "El presupuesto más alto fue de ${:,}.".format(df["Presupuesto"].max()),
+
+        ]
+
+        st.info(random.choice(plantillas))
+
+    st.markdown("---")
+
+    #============================= JUEGO DE ADIVINA LA PELÍCULA POR LA ESCENA
+    st.title("🎬 Juego: ¿A qué película pertenece esta imagen?")       # Crea un encabezado nuevo
+
+    # Inicializar variables en session_state
+    if "pelicula_objetivo" not in st.session_state:
+        st.session_state.pelicula_objetivo = None
+    if "intentos" not in st.session_state:
+        st.session_state.intentos = 0
+    if "juego_terminado" not in st.session_state:
+        st.session_state.juego_terminado = False
+
+    #=========================================
+    #  GENERAR UNA NUEVA PELÍCULA ALEATORIA 
+    #=========================================
+
+    def nueva_ronda():
+        st.session_state.pelicula_objetivo = df.sample(1).iloc[0] # df.sample(1) selecciona una película aleatoria del repertorio
+        st.session_state.intentos = 0
+        st.session_state.juego_terminado = False
+
+    # Si es la primera vez, generar película
+    if st.session_state.pelicula_objetivo is None:
+        nueva_ronda()
+
+
+    pelicula = st.session_state.pelicula_objetivo
+
+    # Mostrar la imagen al usuario desde la columna 'Portada'
+    st.image(pelicula["foto_escena"], width=300, caption="¿Qué película es?")
+
+
+    #===========================
+    #  SISTEMA DE INTENTOS 
+    #===========================
+    if not st.session_state.juego_terminado:                               # Se usa st.session para que la película no cambie cada vez que se presione un botón.
+        respuesta = st.text_input("Escribe el nombre de la película:")
+    
+        if st.button("Adivinar"):
+            if respuesta.strip().lower() == pelicula["Título"].lower():
+                st.success("🎉 ¡Correcto! Has adivinado la película.")
+                st.markdown(f"**Descripción de la escena:** {pelicula['Escena_icónica']}")
+                st.session_state.juego_terminado = True
+            else:
+                st.session_state.intentos += 1
+                intentos_restantes = 3 - st.session_state.intentos         # Permite tres intentos, al equivocarse resta uno.
+            
+                if intentos_restantes > 0:
+                    st.warning(f"❌ Incorrecto. Te quedan **{intentos_restantes}** intentos.")
+                else:
+                    st.error("💥 Se acabaron los intentos.")
+                    st.info(f"La respuesta correcta era: **{pelicula['Titulo']}**")
+                    st.session_state.juego_terminado = True
+
+
+     #  BOTÓN PARA NUEVA RONDA 
+    if st.session_state.juego_terminado:                   # Si l juego ha terminado, 
+        if st.button("Jugar otra vez 🔄"):                 # Sera posible que el botón 'Jugar otra vez' aparezca
+            nueva_ronda()                                  # Y se inicia una nueva partida
+
+    st.markdown("---")
+    # =============================
+    #  JUEGO de ADIVINA EL DIRECTOR
+    # =============================
+    def iniciar_juego(df):
+        pelicula = df.sample(1).iloc[0]
+        st.session_state["portada"] = pelicula["Portada"]
+        st.session_state["director_correcto"] = pelicula["Director"].lower()  # normalización simple
+        st.session_state["foto_director"] = pelicula["foto_director"]
+        st.session_state["intentos"] = 0
+        st.session_state["mensaje"] = ""
+        st.session_state["juego_activo"] = True
+
+    # --------------------------
+    #        INTERFAZ
+    # --------------------------
+    st.title("🎬 Adivina el Director")
+
+    # Botón para iniciar el juego
+    if st.button("🎲 Nueva película"):
+        iniciar_juego(df)
+
+    # Mostrar interfaz solo si hay juego activo
+    if st.session_state.get("juego_activo", False):
+
+        st.image(st.session_state["portada"], width=300)
+        st.write("¿Quién es el director de esta película?")
+
+        respuesta_2 = st.text_input("Escribe el nombre del director:")
+
+        if st.button("Enviar respuesta"):
+            if respuesta_2.strip() == "":
+                st.warning("Ingresa un nombre.")
+            else:
+                st.session_state["intentos"] += 1
+
+                if respuesta_2.lower().strip() == st.session_state["director_correcto"]:
+                    st.success("🎉 ¡Correcto!")
+                    st.write(f"El director es **{st.session_state['director_correcto'].title()}**")
+                    st.image(st.session_state["foto_director"], width=200)
+                    st.session_state["juego_activo"] = False
+
+                else:
+                    intentos_restantes_2 = 3 - st.session_state["intentos"]
+
+                    if intentos_restantes_2 > 0:
+                        st.error(f"❌ Incorrecto. Te quedan {intentos_restantes_2} intentos.")
+                    else:
+                        st.error("❌ Te quedaste sin intentos.")
+                        st.info(f"El director era **{st.session_state['director_correcto'].title()}**")
+                        st.image(st.session_state["foto_director"], width=200)
+                        st.session_state["juego_activo"] = False
