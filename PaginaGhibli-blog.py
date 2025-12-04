@@ -1,51 +1,29 @@
-#Primero ejecutamos la página
-# Para eso creamos un entorno virtual para instalar Streamlit y otras librerías que necesitemos.
-# python -m venv .venv
-# Esto nos permite crear un entorno virtual donde instalaremos Streamlit 
-# y observaremos la página web que se está generando en este script.
-
-# Luego activamos el entorno virtual.
-# En Windows:
-# .venv\Scripts\activate
-# deactivate
-# En MacOS/Linux:
-# source .venv/bin/activate
-
-# Acontinuación instalamos Streamlit 
-# pip install Streamlit
-
-# Este código sirve para acceder una página web en tu navegador que te brinda información sobre Streamlit.
-# Pero se ejecuta en la terminal Python de tu computadora, no en Jupyter Notebook.
-# python -m streamlit hello
-
-# Este comando sirve para ejecutar un script de Python en Streamlit.
-# Pero se ejecuta en la terminal de tu computadora, no en Jupyter Notebook.
-# OJO: Debes antes tener instalado Streamlit en tu computadora, debes antes definir la ruta de tus archivos y 
-##     tener un script de Python (your_script.py) que quieras ejecutar en Streamlit.
 # python -m streamlit run PaginaGhibli-blog.py
 #  your_script.py
 
-# Este código sirve para hacer un primer programa en Streamlit.
-import matplotlib.pyplot as plt
-import streamlit as st 
-import pandas as pd
-import random # Para el boton musical que crearemos a continuacion
-import numpy as np
+# Primero se importan las librerias que vamos a usar
+import matplotlib.pyplot as plt # matplotlib para los gráficos  de barras
+import streamlit as st # streamlit para poder sostener la página web en streamlit
+import pandas as pd # pandas para cargar, limpiar, transformar y visualizar la tabla de datos de Excel
+import random # Para actividades en la sección de curiosidades o más
+import numpy as np # numpy para crear y operar estadísticas, usará junto a los gráficos
 import matplotlib.patches as mpatches # Para algunos graficos que se se veran en el apartado técnico
 
 
 
 
-# usamos pd. para cargar el archivo
-df = pd.read_excel("Ghibli-tabla.xlsx")
+# usamos pd. o pandas para cargar la base de datos a usar
+df = pd.read_excel("Ghibli-tabla.xlsx") # Renombramos el archivo abierto a "df"
 
 
-
-
+# Para crear páginas, creamos una lista con los nombres que estas tendrán y las guardamos con el nombre paginas
 paginas = ["Inicio", "Explora", "Apartado Técnico", "Apartado Artistico", "Curiosidades"]
+
+# Creamos la barra lateral con st.sidebar, y agregamos los botones de navegación con la lista de páginas
 pagina_seleccionada = st.sidebar.selectbox('Selecciona una página', paginas)
-# La función "if" permite que si escogemos "Inicio" nos encontraremos en la primera página   
-if pagina_seleccionada == "Inicio":
+
+# El uso de los condicionales hará que nos muestren la página  
+if pagina_seleccionada == "Inicio": # Por ejemplo, la función "if" permite que si escogemos "Inicio" nos encontraremos en la primera página 
     #st.image("logo.png", width=700)
     # La función st.markdown establece parámetros de texto en Streamlit.
     # Para centrar texto se usa 'text-align: center;'
