@@ -7,7 +7,7 @@ import streamlit as st # streamlit para poder sostener la página web en streaml
 import pandas as pd # pandas para cargar, limpiar, transformar y visualizar la tabla de datos de Excel
 import random # Para actividades en la sección de curiosidades o más
 import numpy as np # numpy para crear y operar estadísticas, usará junto a los gráficos
-import matplotlib.patches as mpatches # Para algunos graficos que se se veran en el apartado técnico
+import matplotlib.patches as mpatches # Para los rotulos de algunos graficos que se se veran en el apartado técnico
 
 
 
@@ -275,31 +275,87 @@ elif pagina_seleccionada == "Apartado Técnico":
     plt.tight_layout()
     # Mostrar en Streamlit
     st.pyplot(fig)
+    plt.close(fig)
+
 
     #==============================================
     #       CONTEO DE PREMIOS Y NOMINACIONES
     #==============================================
-    # Calcular totales
-    total_nominaciones = df["Nominaciones"].sum()
-    total_premios = df["Premios_ganados"].sum()
+    st.markdown(" ")
+    st.markdown("## Nominaciones y Premios Totales del Estudio") # Agregamos el encabezado del gráfico
+    
     df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
 
+    # Contadores de premios para el gráfico de premios
+    con_premios = 0
+    sin_premios = 0
 
-    # Crear dataframe para graficar
-    df_premios = pd.DataFrame({
-        "Categoria": ["Nominaciones", "Premios ganados"],
-        "Cantidad": [total_nominaciones, total_premios]
-    })
+    for index, row in df.iterrows():
+        plt.figure(1)
+        if row["Premios_ganados"] > 0:
+            con_premios += 1
+        else:
+            sin_premios += 1
 
-    # Gráfico de barras
-    st.markdown("## Nominaciones y Premios Totales del Estudio")
+    labels = ["Con premios", "Sin premios"]
+    sizes = [con_premios, sin_premios]
+    colors = ['#c6c983', '#914965']  # Colores diferenciados para el gráfico
+    explode = (0.03, 0.05)  # Separa las porciones
 
-    fig, ax = plt.subplots(figsize=(6,4))
-    ax.bar(df_premios["Categoria"], df_premios["Cantidad"], color= "#CEC917")
-    ax.set_ylabel("Cantidad Total")
-    ax.set_title("Total de Nominaciones y Premios Ganados")
+    plt.figure(figsize=(2.3, 2.3), dpi=100)
+    plt.pie(
+        sizes,
+        explode=explode,
+        labels=labels,
+        colors=colors,
+        autopct='%1.1f%%',
+        shadow=True,
+        startangle=100
+    )
 
-    st.pyplot(fig)
+    plt.title("Distribución de premios en películas")
+    plt.axis("equal")
+    plt.savefig("Premiaciones_graf.png")
+    st.pyplot(plt)
+    plt.close()
+
+    st.markdown(" ")
+
+    # Gráfico de distribución de nominaciones
+    # Creamos los contadores de nominaciones
+
+    con_nominaciones = 0
+    sin_nominaciones = 0
+
+    for index, row in df.iterrows():
+        plt.figure(2)
+        if row["Nominaciones"] > 0:
+            con_nominaciones += 1
+        else:
+            sin_nominaciones += 1
+
+    labels = ["Con nominaciones", "Sin nominaciones"]
+    sizes = [con_nominaciones, sin_nominaciones]
+    colors = ['#9ac7b6', '#914965']  # Nuevos colores para el gráfico de nominaciones
+    explode = (0.05, 0.03)
+
+    plt.figure(figsize=(4, 4), dpi=100)
+    plt.pie(
+        sizes,
+        explode=explode,
+        labels=labels,
+        colors=colors,
+        autopct='%1.1f%%',
+        shadow=True,
+        startangle=100
+    )
+
+    plt.title("Distribución de nominaciones en películas")
+    plt.axis("equal")
+    plt.savefig("Nominaciones_graf.png")
+    st.pyplot(plt)
+    plt.close()
+
 
     with st.expander("Ver películas según premios y nominaciones"):
 
@@ -586,18 +642,59 @@ else:
     if st.button("Dame un dato curioso 🤓"):
         fila = df.sample(1).iloc[0]
 
+        personas_importantes = []
+
+        if fila["Participación_Hayao_M"]:
+            personas_importantes.append("Hayao Miyazaki")
+        if fila["Participación_Isao_T"]:
+            personas_importantes.append("Isao Takahata")
+        if fila["Participación_Joe_H"]:
+            personas_importantes.append("Joe Hisaishi (Compositor)")   # O "Joe Hisaishi (Música)" si quieres aclarar
+
+        # Convertimos la lista en un texto bonito
+        if len(personas_importantes) == 1:
+            texto_personas_importantes = f"fue realizado por **{personas_importantes[0]}**"
+        elif len(personas_importantes) == 2:
+            texto_personas_importantes = f"fue realizado por **{personas_importantes[0]}** y **{personas_importantes[1]}**"
+        elif len(personas_importantes) == 3:
+            texto_personas_importantes = "contó con la participación de **Miyazaki, Takahata y Hisaishi**"
+        else:
+            texto_personas_importantes = "tiene un equipo creativo único en el estudio"
+
+
         plantillas = [
             f"La película **{fila['Titulo_Año']}** tiene una calificación de **{fila['Crítica_IMDb']} en IMDb**.",
             f"¿Sabías que **{fila['Titulo_Año']}** ganó **{fila['Premios_ganados']} premios**?",
             f"**{fila['Titulo_Año']}** fue nominada a **{fila['Nominaciones']} premios**.",
             f"En Japón, la popularidad de **{fila['Titulo_Año']}** fue considerada **{fila['Popularidad_Japón']}**.",
             f"La recaudación mundial de **{fila['Titulo_Año']}** alcanzó los **${fila['Recaudación_mundial']:,}**.",
+            f"La película **{fila['Titulo_Año']}** {texto_personas_importantes}.",
             "La película mejor puntuada en IMDb fue: " + df.loc[df["Crítica_IMDb"].idxmax(), "Titulo_Año"],
             "El presupuesto más alto fue de ${:,}.".format(df["Presupuesto"].max()),
+            f"La película **{fila['Titulo_Año']}** es **{fila['Valor_cultural']}**.",
 
         ]
 
-        st.info(random.choice(plantillas))
+        # st.info(random.choice(plantillas))
+
+        mensaje = random.choice(plantillas)
+
+        st.markdown(
+            f"""
+            <div style="
+                background-color: #f4f0d9;
+                color: #4a3f2f;
+                padding: 15px 20px;
+                border-radius: 10px;
+                border: 2px solid #d1c7a1;
+                font-size: 16px;
+                margin-top: 15px;
+            ">
+                {mensaje}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     st.markdown("---")
 
@@ -651,7 +748,7 @@ else:
                     st.warning(f"❌ Incorrecto. Te quedan **{intentos_restantes}** intentos.")
                 else:
                     st.error("💥 Se acabaron los intentos.")
-                    st.info(f"La respuesta correcta era: **{pelicula['Titulo']}**")
+                    st.info(f"La respuesta correcta era: **{pelicula['Título']}**")
                     st.session_state.juego_terminado = True
 
 
