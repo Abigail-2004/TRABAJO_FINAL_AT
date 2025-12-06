@@ -8,7 +8,7 @@ import pandas as pd # pandas para cargar, limpiar, transformar y visualizar la t
 import random # Para actividades en la sección de curiosidades o más
 import numpy as np # numpy para crear y operar estadísticas, usará junto a los gráficos
 import matplotlib.patches as mpatches # Para los rotulos de algunos graficos que se se veran en el apartado técnico
-
+from wordcloud import WordCloud
 
 
 
@@ -212,8 +212,8 @@ elif pagina_seleccionada == "Apartado Técnico":
     height = 0.35  # separación entre barras
 
     # Barras horizontales lado a lado
-    ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#CEC917")
-    ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#58A449")
+    ax.barh(y_pos - height/2, presupuesto, height=height, label="Presupuesto", alpha=0.7, color="#BFBC6F")
+    ax.barh(y_pos + height/2, recaudacion, height=height, label="Recaudación", alpha=0.7, color="#5B8254")
 
     # Estética
     ax.set_yticks(y_pos)
@@ -248,7 +248,7 @@ elif pagina_seleccionada == "Apartado Técnico":
     # Ordenar por fecha de estreno
     df = df.sort_values("Fecha_estreno").reset_index(drop=True)
 
-    # --- Crear el gráfico ---
+    # ======= Creación del gráfico =============
     fig, ax = plt.subplots(figsize=(10, 6))
 
     # Scatter plot: fecha en x, índice en y
@@ -297,12 +297,12 @@ elif pagina_seleccionada == "Apartado Técnico":
         else:
             sin_premios += 1
 
-    labels = ["Con premios", "Sin premios"]
+    labels = ["Películas con premios", "Películas sin premios"]
     sizes = [con_premios, sin_premios]
-    colors = ['#c6c983', '#914965']  # Colores diferenciados para el gráfico
-    explode = (0.03, 0.05)  # Separa las porciones
+    colors = ['#c6c983', "#A57745"]  # Colores diferenciados para el gráfico
+    explode = (0.03, 0.05)  # Explode es usado para separar las porciones
 
-    plt.figure(figsize=(2.3, 2.3), dpi=100)
+    plt.figure(figsize=(4, 4), dpi=100)
     plt.pie(
         sizes,
         explode=explode,
@@ -310,10 +310,10 @@ elif pagina_seleccionada == "Apartado Técnico":
         colors=colors,
         autopct='%1.1f%%',
         shadow=True,
-        startangle=100
+        startangle=50
     )
 
-    plt.title("Distribución de premios en películas")
+    plt.title("Distribución de premiaciones del Studio Ghibli")
     plt.axis("equal")
     plt.savefig("Premiaciones_graf.png")
     st.pyplot(plt)
@@ -334,9 +334,9 @@ elif pagina_seleccionada == "Apartado Técnico":
         else:
             sin_nominaciones += 1
 
-    labels = ["Con nominaciones", "Sin nominaciones"]
+    labels = ["Películas con nominaciones", "Sin nominaciones"]
     sizes = [con_nominaciones, sin_nominaciones]
-    colors = ['#9ac7b6', '#914965']  # Nuevos colores para el gráfico de nominaciones
+    colors = ['#c6c983', "#A57745"]  # Nuevos colores para el gráfico de nominaciones
     explode = (0.05, 0.03)
 
     plt.figure(figsize=(4, 4), dpi=100)
@@ -350,7 +350,7 @@ elif pagina_seleccionada == "Apartado Técnico":
         startangle=100
     )
 
-    plt.title("Distribución de nominaciones en películas")
+    plt.title("Distribución de nominaciones del Studio Ghibli")
     plt.axis("equal")
     plt.savefig("Nominaciones_graf.png")
     st.pyplot(plt)
@@ -430,7 +430,7 @@ elif pagina_seleccionada == "Apartado Técnico":
     ax.bar(
         tabla_rangos["Rango IMDb"],
         tabla_rangos["Cantidad de Películas"],
-        color="#58A449",   # verde ghibli
+        color="#58A449",  
         alpha=0.9
     )
 
@@ -513,13 +513,31 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
             st.markdown(f"**Estilo visual:** {datos['Estilo_visual']}")
             st.markdown("### Ambientación")
             st.markdown(f"{datos['Ambientación']}")
+            st.markdown("### Personajes")
+            st.markdown(f"**Protagonista:** {datos['Protagonista']}")
 
         with col3:
+            
+            antagonista = datos["presencia_anta"]
+            nom_anta = datos["Antagonista"]
+            if str(antagonista).lower() == "true" and pd.notna(nom_anta):
+                st.markdown(f"**Antagonista:** {nom_anta}")
+            else:
+                st.markdown("**Antagonista:** _No hay antagonista en esta película_")
+
+            criatura_f = datos["presencia_criat"]
+            nom_criat = datos["Criaturas_fantásticas"]
+            if str(criatura_f).lower() == "true" and pd.notna(nom_criat):
+                st.markdown(f"**Criatura/s fantástica/s:** {nom_criat}")
+            else:
+                st.markdown("**Criatura/s fantástica/s:** _No hay criaturas fantasticas en esta película_")
             
             banda = datos["Banda_sonora"]
             banda_link = datos["Banda_link"]
             link_banda = datos["link_banda_sonora"]
 
+            st.markdown("### Temas")
+            st.markdown(f"{datos['Temas_principales']}")
             st.markdown("### Frase conocida")
             st.markdown(f"*{datos['Frase']}*")
             st.markdown("### Banda sonora")
@@ -588,41 +606,176 @@ elif pagina_seleccionada == "Apartado Artistico":                             # 
     conteo_tecnica = df["Técnica_usada"].value_counts()
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.bar(
+    
+    # Para realizar un gráfico horizontal se usa ax.barh en lugar de ax.bar 
+    ax.barh(
         conteo_tecnica.index,
         conteo_tecnica.values,
         color="#2C715F"
     )
 
-    ax.set_xlabel("Técnica de animación")
-    ax.set_ylabel("Cantidad de películas")
+    ax.set_ylabel("Técnica de animación")
+    ax.set_xlabel("Cantidad de películas")
     ax.set_title("Frecuencia de técnicas utilizadas")
     plt.xticks(rotation=45)
 
     st.pyplot(fig)
 
-    # GRÁFICOS DE ESTILO VISUAL
+    #=============================================
+    #        GRÁFICO DE REPRESENTACIONES
+    #=============================================
+    st.markdown("## Gráfico de barras de representación en las películas de Studio Ghibli")
+    # Se crea una lista de mapeo, en la cuál asignamos valores númericos a los valores ...
+    
+    mapeo = {
+        "Baja": 1,      # baja recibirá el valor de 1
+        "Media": 2,     # media recibirá el valor de 2
+        "Alta": 3,      # alta recibirá el valor de 3
+        "Muy alta": 4   # muy alta recibirá el valor de 4
+    }
 
-    st.markdown("## Frecuencia de estilo visual en las películas de Studio Ghibli")
+    df["Representación_infantil_num"] = df["Representación_infantil"].map(mapeo)
+    df["Representación_femenina_num"] = df["Representación_femenina"].map(mapeo)
+    
+    # Agrupamos los datos de representación por película con group.by 
+    df_grouped = df.groupby("Título")[["Representación_infantil_num", "Representación_femenina_num"]].mean()
 
+    # Gráfico de barras agrupadas horizontal
+    ax = df_grouped.plot(kind="barh", figsize=(10, 6))
+
+    #Graficamos
+    fig, ax = plt.subplots(figsize=(14,9))
+    df_grouped.plot(kind="barh", ax=ax, color= ["#BFBC6F","#5B8254"])
+    ax.set_xlabel("Nivel de representación")
+    ax.set_ylabel("Película")
+    ax.set_title("Representación infantil y femenina por película")
+    ax.legend(["Representación infantil", "Representación femenina"], title="Indicadores")
+    plt.tight_layout()
+    # Mostrar en Streamlit
+    st.pyplot(fig)
+    # Agregamos un texto explicativo para mejor lectura del gráfico
+    st.markdown("**Escala de representación:** 1 = Baja • 2 = Media • 3 = Alta • 4 = Muy alta")
+    st.markdown(" ")
+
+    # === GRÁFICO PIE DE ELEMENTOS MÁGICOS EN LAS PELÍCULAS DE ESTUDIO GHIBLI ===
+    st.markdown("## Presencia de elementos mágicos en las películas de Studio Ghibli") # Agregamos un título para el gráfico
+
+    # Agrupamos usando groupby y contamos cuántas películas tienen y no tienen elementos mágicos
+    df_grouped_magia = df.groupby("Elementos_mágicos")["Título"].count()
+
+    # Asignamos etiquetas (labels) para el gráfico
+    labels = df_grouped_magia.index.tolist()
+    sizes = df_grouped_magia.values.tolist()
+    colors = ['#7FB3D5', '#C39BD3']  # Colores diferenciados para cada porción
+    explode = (0.05, 0.05)  # Explode para la separación visual de las porciones
+
+    # Crear figura
+    fig, ax = plt.subplots(figsize=(3, 3), dpi=100)
+
+    ax.pie(
+        sizes,
+        labels=labels,
+        autopct='%1.1f%%',
+        colors=colors,
+        explode=explode,
+        shadow=True,
+        startangle=90
+    )
+
+    ax.set_title("Presencia de elementos mágicos en las películas")
+
+    st.pyplot(fig) # Mostramos el gráfico
+    plt.close()
+   
+    #==== GRÁFICOS DE ESTILO VISUAL ====
+
+    st.markdown("## Nube de palabras: Estilo visual más usado en las películas de Studio Ghibli") # Agregamos un título para el gráfico
+
+    # Generamos el conteo de los estilos visuales hallados en la base de datos
     estilos_expandidos = (
-    df["Estilo_visual"]
-    .str.lower()               # Convierte todo a minusculas
-    .str.split(",")            # separa por coma
-    .explode()                 # crea una fila por cada estilo
-    .str.strip()               # elimina espacios
+        df["Estilo_visual"]
+        .str.lower()               # Convierte todo a minusculas
+        .str.split(",")            # separa por coma
+        .explode()                 # crea una fila por cada estilo
+        .str.strip()               # elimina espacios
     )
     conteo_estilo = estilos_expandidos.value_counts()
 
-    plt.figure(figsize=(10,6))
-    conteo_estilo.plot(kind="bar", color="#2C715F")   # color personalizado
-    plt.title("Frecuencia de estilos visuales en Studio Ghibli")
-    plt.xlabel("Estilo visual")
-    plt.ylabel("Cantidad")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    wc_estilos = WordCloud(
+        width=800,
+        height=400,
+        background_color="white",
+        colormap="viridis"  # puedes cambiar el color si quieres
+    ).generate_from_frequencies(conteo_estilo.to_dict())
+
+    # Mostrar en Streamlit
+    plt.figure(figsize=(10, 6)) # Asignamos el tamaño del gráfico con *figsize*
+    plt.imshow(wc_estilos, interpolation="bilinear")
+    plt.axis("off") # Los ejes están desactivados "off"
 
     st.pyplot(plt)
+    plt.close()
+
+    st.markdown(" ")
+
+    # === NUBE DE ANIMALES ===
+    st.markdown("## Nube de Palabras: Animales recurrentes en Studio Ghibli")
+    # Ahora crearemos una wordcloud para la recurrencia de animales en las películas del estudio
+    # Convertimos la columna en una lista de palabras separadas
+    lista_animales = df["Animales"].dropna().str.split(",").sum()
+
+    # Convertimos a minúsculas y limpiamos espacios con .strip y .lower
+    lista_animales = [a.strip().lower() for a in lista_animales]
+
+    # Creamos diccionario de frecuencias
+    frecuencias_animales = {}
+    for animal in lista_animales:
+        frecuencias_animales[animal] = frecuencias_animales.get(animal, 0) + 1
+
+    # Generamos la nube de palabras y la guardamos con el nombre "wv_animales"
+    wc_animales = WordCloud(
+        width=800,
+        height=400,
+        background_color="white"
+    ).generate_from_frequencies(frecuencias_animales)
+
+    # Mostramos el gráfico
+    plt.figure(figsize=(8, 8))
+    plt.imshow(wc_animales, interpolation="bilinear")
+    plt.axis("off")
+    st.pyplot(plt)
+    plt.close()
+
+    st.markdown("## Nube de Palabras: Transportes recurrentes en Studio Ghibli")
+
+    # Crearemos otra wordcloud para la recurrencia de transportes en las películas del estudio
+    # Convertimos la columna en una lista de palabras separadas como en la otra nube
+
+    lista_transportes = df["Transporte"].dropna().str.split(",").sum()
+
+    # Limpiamos y pasamos a minusculas la lista
+    lista_transportes = [t.strip().lower() for t in lista_transportes]
+
+    # Creamos diccionario de frecuencias y lo guardamos como "frecuencias_transportes"
+    frecuencias_transportes = {}
+    for t in lista_transportes:
+        frecuencias_transportes[t] = frecuencias_transportes.get(t, 0) + 1
+
+    # Generamos la nube de palabras y le asignamos el nombre "wc_transportes"
+    wc_transportes = WordCloud(
+        width=800,
+        height=400,
+        background_color="white"
+    ).generate_from_frequencies(frecuencias_transportes)
+
+    # Mostramos el gráfico
+    plt.figure(figsize=(8, 8))
+    plt.imshow(wc_transportes, interpolation="bilinear")
+    plt.axis("off")
+    st.pyplot(plt)
+    plt.close()
+
+
 
 else:
     st.markdown("<h1 style='text-align: center;'>CURIOSIDADES Y MÁS</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezado del apartado
@@ -667,6 +820,7 @@ else:
             f"¿Sabías que **{fila['Titulo_Año']}** ganó **{fila['Premios_ganados']} premios**?",
             f"**{fila['Titulo_Año']}** fue nominada a **{fila['Nominaciones']} premios**.",
             f"En Japón, la popularidad de **{fila['Titulo_Año']}** fue considerada **{fila['Popularidad_Japón']}**.",
+            f"Fuera de Japón, la popularidad de **{fila['Titulo_Año']}** fue considera **{fila['Popularidad_internacional']}**",
             f"La recaudación mundial de **{fila['Titulo_Año']}** alcanzó los **${fila['Recaudación_mundial']:,}**.",
             f"La película **{fila['Titulo_Año']}** {texto_personas_importantes}.",
             "La película mejor puntuada en IMDb fue: " + df.loc[df["Crítica_IMDb"].idxmax(), "Titulo_Año"],
@@ -675,30 +829,13 @@ else:
 
         ]
 
-        # st.info(random.choice(plantillas))
-
-        mensaje = random.choice(plantillas)
-
-        st.markdown(
-            f"""
-            <div style="
-                background-color: #f4f0d9;
-                color: #4a3f2f;
-                padding: 15px 20px;
-                border-radius: 10px;
-                border: 2px solid #d1c7a1;
-                font-size: 16px;
-                margin-top: 15px;
-            ">
-                {mensaje}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.info(random.choice(plantillas))
 
     st.markdown("---")
 
-    #============================= JUEGO DE ADIVINA LA PELÍCULA POR LA ESCENA
+    # ============================================
+    #  JUEGO DE ADIVINA LA PELÍCULA POR LA ESCENA
+    # ============================================
     st.title("🎬 Juego: ¿A qué película pertenece esta imagen?")       # Crea un encabezado nuevo
 
     # Inicializar variables en session_state
