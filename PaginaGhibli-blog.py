@@ -280,8 +280,8 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
             return "#CEC917"
         elif "Streaming" in estreno: # Si contiene "Streaming", devuelve verde claro
             return "#58A449"
-        elif "Internacional" in estreno: # Si contiene "Internacional", devuelve verde oscuro
-            return "#2C715F"
+        elif "Internacional" in estreno: # Si contiene "Internacional", devuelve naranja
+            return "#D79862"
         else:                         # Para cualquier otro tipo, devuelve gris
             return "gray"
 
@@ -308,7 +308,7 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
 
     # Creamos una leyenda personalizada para mejor lectura del gráfico
     legend_patches = [
-        mpatches.Patch(color="#2C715F", label="Internacional"),   # Asigna el color verde oscuro para estrenos internacionales
+        mpatches.Patch(color="#D79862", label="Internacional"),   # Asigna el color verde oscuro para estrenos internacionales
         mpatches.Patch(color="#58A449", label="Streaming"),       # Verde claro para streaming
         mpatches.Patch(color="#CEC917", label="Festival"),        # Amarillo para festivales
         mpatches.Patch(color="gray", label="Otro / No clasificado") # Y gris para los demás
@@ -330,8 +330,8 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
     df["Titulo_Año"] = df["Título"] + " (" + df["Año"].astype(str) + ")"
 
     # Creamos contadores de premios para el gráfico de premios
-    con_premios = 0 # Contador para películas que ganaron premios
-    sin_premios = 0 # Contador para películas sin premios
+    con_premios = 0 
+    sin_premios = 0 
 
     # for itera sobre cada fila del DataFrame
     for index, row in df.iterrows():
@@ -344,7 +344,7 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
     # Establecemos la configuración del pie chart de premios
     labels = ["Películas con premios", "Películas sin premios"] # Labels asigna etiquetas de cada porción
     sizes = [con_premios, sin_premios]  # El tamaño de cada porción
-    colors = ['#c6c983', "#A57745"]  # Asigna colores diferenciados para el gráfico
+    colors = ['#d7c092', "#D79862"]  # Asigna colores diferenciados para el gráfico
     explode = (0.03, 0.05)  # Explode es usado para separar las porciones
 
     # creación de la figura del pie chart
@@ -362,28 +362,32 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
     plt.title("Distribución de premiaciones del Studio Ghibli") # Asignamos el encabezado al gráfico
     plt.axis("equal") # equal permite mantener el aspecto circular perfecto
     plt.savefig("Premiaciones_graf.png") # Savefig permite guardar el gráfico como imagen
+    st.pyplot(plt) # Mostramos el gráfico en Streamlit
     plt.close() # Cierra la figura para liberar memoria
 
     st.markdown(" ")
 
-    # Gráfico de distribución de nominaciones
+    # GRÁFICO DE DISTRIBUCIÓN DE NOMINACIONES
     # Creamos los contadores de nominaciones
 
     con_nominaciones = 0
     sin_nominaciones = 0
 
+    # Con IF iteramos sobre cada fila del DataFrame
     for index, row in df.iterrows():
-        plt.figure(2)
-        if row["Nominaciones"] > 0:
-            con_nominaciones += 1
-        else:
-            sin_nominaciones += 1
+        plt.figure(2)       # Se selecciona la figura 2
+        if row["Nominaciones"] > 0: # Si las nominaciones encontradas superan más de 0
+            con_nominaciones += 1   # La porción "Con nominaciones" incrementa 
+        else:               # De lo contrario
+            sin_nominaciones += 1   # Si no tiene nominaciones, la porción "Sin nominaciones" incrementa
 
+    # Asignamos la configuración del gráfico pie chart de nominaciones
     labels = ["Películas con nominaciones", "Sin nominaciones"]
     sizes = [con_nominaciones, sin_nominaciones]
-    colors = ['#c6c983', "#A57745"]  # Nuevos colores para el gráfico de nominaciones
+    colors = ['#d7c092', "#D79862"]  # Nuevos colores para el gráfico de nominaciones
     explode = (0.05, 0.03)
 
+    # Repetimos el proceso del gráfico anterior.
     plt.figure(figsize=(4, 4), dpi=100)
     plt.pie(
         sizes,
@@ -395,103 +399,107 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
         startangle=100
     )
 
-    plt.title("Distribución de nominaciones del Studio Ghibli")
-    plt.axis("equal")
-    plt.savefig("Nominaciones_graf.png")
-    st.pyplot(plt)
-    plt.close()
+    plt.title("Distribución de nominaciones del Studio Ghibli") # Asignamos un encabezado para el gráfico
+    plt.axis("equal")       # equal mantiene el círculo perfecto
+    plt.savefig("Nominaciones_graf.png") # Habilitamos la opción para guardar el gráfico
+    st.pyplot(plt) # Mostramos el gráfico en Streamlit
+    plt.close()     # Cerramos la imagen para liberar memoria
 
-
-    with st.expander("Ver películas según premios y nominaciones"):
-
+    # Con st.expander podemos crear pequeños textos desplegables, en este caso lo usaremos para generar una lista de las películas y los premios o nominaciones que obtuvieron
+    with st.expander("Ver películas según premios y nominaciones"): # Asignamos un encabezado al desplegable
+        # Asignamos cuatro columnas para mejor orden
         col1, col2, col3, col4 = st.columns(4)
 
-        # Subconjuntos
+        # Creamos subconjuntos en forma de listas de películas con premios/ sin premios y con nominaciones/sin nominaciones
         con_premios = df[df["Premios_ganados"] > 0]["Titulo_Año"].tolist()
         sin_premios = df[df["Premios_ganados"] == 0]["Titulo_Año"].tolist()
 
         con_nominaciones = df[df["Nominaciones"] > 0]["Titulo_Año"].tolist()
         sin_nominaciones = df[df["Nominaciones"] == 0]["Titulo_Año"].tolist()
 
-        #  Columna 1: Con Premios 
+        #  Columna 1 contiene películas con Premios 
         with col1:
-            st.markdown("### 🏆 Con Premios")
-            if con_premios:
-                for t in con_premios:
-                    st.markdown(f"- {t}")
+            st.markdown("### 🏆 Con Premios") # Generamos el ncabezado de la columna
+            if con_premios: # Si la lista no está vacía
+                for t in con_premios: # Se itera sobre cada película de la lista
+                    st.markdown(f"- {t}") # Se muestra cada película como un elemento de la lista
             else:
-                st.write("Ninguna")
+                st.write("Ninguna") # De lo contrario, se muestra el mensaje.
 
-        #  Columna 2: Sin Premios 
+        #  Columna 2 contiene películas sin Premios 
         with col2:
-            st.markdown("### ❌ Sin Premios")
-            if sin_premios:
-                for t in sin_premios:
-                    st.markdown(f"- {t}")
+            st.markdown("### ❌ Sin Premios") # Generamos el ncabezado de la columna
+            if sin_premios:         # Si la lista no está vacía
+                for t in sin_premios:       # Se itera sobre cada película de la lista
+                    st.markdown(f"- {t}")   # Se muestra cada película como un elemento de la lista
             else:
-                st.write("Ninguna")
+                st.write("Ninguna")         # De lo contrario, se muestra el mensaje.
 
-        #  Columna 3: Con Nominaciones 
+        #  Columna 3 contiene películas con Nominaciones 
         with col3:
-            st.markdown("### 🎬 Con Nominaciones")
-            if con_nominaciones:
-                for t in con_nominaciones:
-                    st.markdown(f"- {t}")
+            st.markdown("### 🎬 Con Nominaciones")  # Generamos el ncabezado de la columna
+            if con_nominaciones:                # Si la lista no está vacía
+                for t in con_nominaciones:      # Se itera sobre cada película de la lista
+                    st.markdown(f"- {t}")       # Se muestra cada película como un elemento de la lista
             else:
-                st.write("Ninguna")
+                st.write("Ninguna")             # De lo contrario, se muestra el mensaje.
 
-        #  Columna 4: Sin Nominaciones 
+        #  Columna 4 contiene películas sin Nominaciones 
         with col4:
-            st.markdown("### ❌ Sin Nominaciones")
-            if sin_nominaciones:
-                for t in sin_nominaciones:
-                    st.markdown(f"- {t}")
+            st.markdown("### ❌ Sin Nominaciones")  # Generamos el ncabezado de la columna
+            if sin_nominaciones:                    # Si la lista no está vacía
+                for t in sin_nominaciones:          # Se itera sobre cada película de la lista
+                    st.markdown(f"- {t}")         # Se muestra cada película como un elemento de la lista
             else:
-                st.write("Ninguna")
+                st.write("Ninguna")                 # De lo contrario, se muestra el mensaje.
 
 
     #  AGRUPACIÓN DE PELÍCULAS POR RANGOS IMDb
 
-    st.markdown("## Agrupación de películas por rangos de puntuación IMDb")
+    st.markdown("## Agrupación de películas por rangos de puntuación IMDb") # Asignamos un título a la sección
 
-    # Crear los rangos (bins)
+    # Creamos los rangos (bins) para agrupar las puntuaciones de IMDb
     bins = [0, 6, 7, 8, 9, 10]
-    labels = ["0–6", "6–7", "7–8", "8–9", "9–10"]
+    labels = ["0–6", "6–7", "7–8", "8–9", "9–10"] # Y las etiquetas para cada rango
 
+    # Creamos una nueva columna llamada "IMDb_rango" con la categoría de cada película según su puntuación
     df["IMDb_rango"] = pd.cut(df["Crítica_IMDb"], bins=bins, labels=labels, include_lowest=True)
+    # Asignamos la columna con las puntuaciones de la df (Crítica_IMDb), asignamos límites, etiquetas y el más bajo de los rangos.
 
-    # Contar cuántas películas hay por rango
+    # Contamos cuántas películas hay por rango con .count y las agrupamos con .groupby en una sola lista: tabla_rangos
     tabla_rangos = df.groupby("IMDb_rango")["Título"].count().reset_index()
+    # Cambiamos nombres de columnas para mejor lectura
     tabla_rangos.columns = ["Rango IMDb", "Cantidad de Películas"]
     
     #======================================
     #  GRÁFICO DE BARRAS POR RANGOS IMDb
     # =====================================
-    st.markdown("### Gráfico: Cantidad de películas por rango IMDb")
+    st.markdown("### Gráfico: Cantidad de películas por rango IMDb") # Asignamos un título al gráfico
 
-    # Crear figura
+    # Creamos la figura y el eje para el gráfico
     fig, ax = plt.subplots(figsize=(7, 3))
 
+    # Creamos el gráfico de barras verticales
     ax.bar(
-        tabla_rangos["Rango IMDb"],
-        tabla_rangos["Cantidad de Películas"],
-        color="#58A449",  
-        alpha=0.9
+        tabla_rangos["Rango IMDb"],             # Asignamos los rangos de IMDb al eje x
+        tabla_rangos["Cantidad de Películas"],  # Asignamos la cantidad de películas por rango al eje y
+        color="#B9C297",                      # Definimos el color de las barras
+        alpha=0.9                               # Definimos la transparencia de las barras
     )
 
-        # Etiquetas
+        # Asignamos las etiquetas y el encabezado del gráfico
     ax.set_xlabel("Rango de Puntuación IMDb")
     ax.set_ylabel("Cantidad de Películas")
     ax.set_title("Distribución de películas según su puntuación IMDb")
 
-        # Mostrar conteo encima de cada barra
+        # Mostramos el conteo encima de cada barra
     for i, val in enumerate(tabla_rangos["Cantidad de Películas"]):
         ax.text(i, val + 0.1, str(val), ha='center')
 
-    plt.tight_layout()
-    st.pyplot(fig)
+    plt.tight_layout() # Ajustamos los márgenes
+    st.pyplot(fig)      # Mostramos el gráfico
 
-    # Muestran los títulos dentro de cada rango
+    # Mostramos los títulos dentro de cada rango
     with st.expander("Ver títulos por rango"): # .expander creará una especie de etiqueta desplegable...
 
         # En la cuál se crean 4 columnas
@@ -519,7 +527,7 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
 
     # Creamos el gráfico de barras horizontal
     fig, ax = plt.subplots(figsize=(10, 6)) 
-    ax.barh(conteo_adaptaciones.index, conteo_adaptaciones.values, color="#8C4A92")
+    ax.barh(conteo_adaptaciones.index, conteo_adaptaciones.values, color=["#B9C297","#D79862","#949619"])
 
     #Establecemos las etiquetas correspondientes
     ax.set_xlabel("Cantidad de películas")  # La cantidad de películas (número) se mostrará en dirección horizontal...
@@ -532,44 +540,47 @@ elif pagina_seleccionada == "Apartado Técnico": # Si escogemos "Apartado Técni
 elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la opción "Apartado Artistico" de los botones de navegación, nos encontraremos en la cuarta página.
     st.markdown("<h1 style='text-align: center;'>APARTADO ARTISTICO</h1>", unsafe_allow_html=True) # Agrega otro st. markdown para el encabezado del apartado
     st.markdown("¡Conoce un poco más del arte de las películas del estudio!") # Entonces mostrará un mensaje que le da la bienvenida 
-    
-    #  CONTROL DE SESIÓN 
-    if "pelicula_elegida" not in st.session_state:
-        st.session_state.pelicula_elegida = None
-    #  LISTA DE PELÍCULAS Y PORTADAS 
-    lista_peliculas = df["Título"].tolist()
+    #Generaremos las mismas tarjetas para las películas que contendran esta vez información acerca de el arte y tématica
 
-    # Diccionario: { título : url_portada } para que se muestre el título de la película junto con la portada
+    #  CONTROL DE SESIÓN 
+    if "pelicula_elegida" not in st.session_state: # Crear la variable en session_state si aún no existe y evita errores por variables inexistentes.
+        st.session_state.pelicula_elegida = None # Si no existe, se crea y se inicializa con None.
+    #  LISTA DE PELÍCULAS Y PORTADAS 
+    lista_peliculas = df["Título"].tolist()  # Convertimos la columna "Título" de la base de datos en una lista.
+
+    # Creamos un diccionario que relaciona cada título de película con su portada respectiva en la base de datos (df)
     portadas = { df.loc[i,"Título"]: df.loc[i,"Portada"] for i in range(len(df)) }
 
 
     #  SI NO SE HA ELEGIDO PELÍCULA: MOSTRAR MENÚ DE PORTADAS 
-    if st.session_state.pelicula_elegida is None:
+    if st.session_state.pelicula_elegida is None: # Comprueba si no se ha seleccionado ninguna película
 
+        # Creamos un pequeño encabezado con instrucciones para el usuario.
         st.markdown("<h3 style='text-align: left;'> 🎨 Selecciona una película para ver su análisis artístico:</h3>", unsafe_allow_html=True)
         cols = st.columns(4)  # Se mostrará la lista de películas en 4 columnas
 
+        # con FOR iteramos sobre la lista de películas
         for i, titulo in enumerate(lista_peliculas):
-            col = cols[i % 4]
+            col = cols[i % 4] # Asignamos cada película a una columna de manera cíclica (0-3)
 
-            with col:
-                st.image(portadas[titulo], use_container_width=True)
-                if st.button(titulo, key=titulo):
-                    st.session_state.pelicula_elegida = titulo
-                    st.rerun()
+            with col:   # Todo lo que esta dentro de "with col" se mostrará en esa columna
+                st.image(portadas[titulo], use_container_width=True) # Mostramos la portada de la película
+                if st.button(titulo, key=titulo): # Creamos un botón con el nombre de la película
+                    st.session_state.pelicula_elegida = titulo # Al darle clic, guarda la película seleccionada en el estado de sesión
+                    st.rerun() # Fuerza a streamlit a mostrar la tarjeta artística
 
     #  SI YA SE SELECCIONÓ UNA PELÍCULA: Se mostrará la tarjeta artistica 
     else:
-        titulo = st.session_state.pelicula_elegida
-        datos = df[df["Título"] == titulo].iloc[0]
+        titulo = st.session_state.pelicula_elegida # De lo contrario, se obtiene la película seleccionada
+        datos = df[df["Título"] == titulo].iloc[0] # Y se extrae la fila correspondiente del DataFrame
 
-        st.markdown(f"## 🎬 Análisis artístico de **{titulo}**")
-        col1, col2, col3= st.columns(3)
+        st.markdown(f"## 🎬 Análisis artístico de **{titulo}**") # Creamos un encabezado para el análisis
+        col1, col2, col3= st.columns(3) # Creamos 3 columnas para mostrar información organizada
         
-        with col1:
+        with col1: # En la columna 1 se muestra la portada, extraída de la columna "Portada" de la base de datos 
             st.image(datos["Portada"], width=200)
 
-        with col2:
+        with col2: # En la columna 2, se muestra la información de técnica, estilo, ambientación y personajes
             st.markdown("### Técnica y Estilo")
             st.markdown(f"**Técnica de animación:** {datos['Técnica_usada']}")
             st.markdown(f"**Paleta de colores:** {datos['Paleta_de_colores']}")
@@ -579,25 +590,32 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
             st.markdown("### Personajes")
             st.markdown(f"**Protagonista:** {datos['Protagonista']}")
 
-        with col3:
+        with col3: # En la columna 3, se muestra la información acerca de criaturas, temas, frase y banda sonora.
             
-            antagonista = datos["presencia_anta"]
-            nom_anta = datos["Antagonista"]
+            antagonista = datos["presencia_anta"] # 'presencia_anta' indica si hay un antagonista en la película, extrayendo información de la columna "Presencia_anta" del df
+            nom_anta = datos["Antagonista"] # Se extrae los nombres de la columna 'Antagonista' del df y se guardan en la lista nom_anta
+            # Comprobamos dos condiciones antes de mostrar el antagoenista:
+            # Que la columna 'presencia_anta' indique True, convertida a string y en minúsculas
+            # Que el nombre del antagonista sea un dato disponible
             if str(antagonista).lower() == "true" and pd.notna(nom_anta):
-                st.markdown(f"**Antagonista:** {nom_anta}")
-            else:
+                # Si ambas condiciones se cumplen, se muestra el nombre del antagonista en negrita
+                st.markdown(f"**Antagonista:** {nom_anta}") 
+            else: # Si no hay antagonista o el dato está vacío, se muestra un mensaje por defecto
                 st.markdown("**Antagonista:** _No hay antagonista en esta película_")
 
-            criatura_f = datos["presencia_criat"]
-            nom_criat = datos["Criaturas_fantásticas"]
+            # 'presencia_criat' indica si hay criaturas fantásticas en la película
+            criatura_f = datos["presencia_criat"] # Extraemos los datos de la columna "presencia_criat" y lo guardamos en una lista criatura_f
+            nom_criat = datos["Criaturas_fantásticas"] # 'Criaturas_fantásticas' contiene el nombre o descripción de la criatura, guardada en la lista nom_criat
+            # Verificamos las mismas condiciones que con el antagonista
             if str(criatura_f).lower() == "true" and pd.notna(nom_criat):
-                st.markdown(f"**Criatura/s fantástica/s:** {nom_criat}")
-            else:
+                st.markdown(f"**Criatura/s fantástica/s:** {nom_criat}") # Si hay criaturas, se muestra el nombre
+            else: # Si no hay criaturas, se muestra el mensaje por defecto
                 st.markdown("**Criatura/s fantástica/s:** _No hay criaturas fantasticas en esta película_")
             
-            banda = datos["Banda_sonora"]
-            banda_link = datos["Banda_link"]
-            link_banda = datos["link_banda_sonora"]
+            # 'Banda_sonora' contiene el nombre del compositor o banda sonora
+            banda = datos["Banda_sonora"] # Extraemos la columna del df y la guardamos en una lista llamada banda
+            banda_link = datos["Banda_link"] # 'Banda_link' indica si hay un enlace disponible
+            link_banda = datos["link_banda_sonora"] # 'link_banda_sonora' contiene el enlace real de existir
 
             st.markdown("### Temas")
             st.markdown(f"{datos['Temas_principales']}")
@@ -606,13 +624,16 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
             st.markdown("### Banda sonora")
             st.markdown(f"**Compositor:** {banda}")
 
+            # Con IF verificamos si existe un enlace para la banda sonora
+            # Que 'Banda_link' coincida con True, convertido a minúsculas
+            # Que 'link_banda_sonora' no sea un dato vacío
             if str(banda_link).lower() == "true" and pd.notna(link_banda):
-                st.markdown(f"[🎵 Escuchar banda sonora]({link_banda})")
-            else:
-                st.markdown("_No disponible en línea_")
+                st.markdown(f"[🎵 Escuchar banda sonora]({link_banda})") # Se muestra un enlace clickeable
+            else:                 # Si no se encuentra enlace alguno de banda sonora
+                st.markdown("_No disponible en línea_") # Se ejecuta el mensaje "No disponible en línea"
 
-        st.markdown("---")
-        # BOTÓN PARA VOLVER
+        st.markdown("---") # Creamos un separador
+        # CREAMOS OTRO BOTÓN PARA VOLVER AL MENÚ
         if st.button("Llevame de regreso al menú"):
             st.session_state.pelicula_elegida = None
             st.rerun()
@@ -661,23 +682,37 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
     # Se convierte todas las paletas a lista y se limpian
     lista_colores = []
 
+    # Con IF recorremos la columna "Paleta_de_colores" del DataFrame fila por fila
     for paleta in df["Paleta_de_colores"]:
-        if pd.notna(paleta):
+        if pd.notna(paleta): # Comprobamos que la celda no sea datos inexistentes 
+            # Cada paleta puede contener varios colores separados por comas,
+            # entonces primero separamos la cadena con .split(",")
+            # y luego aplicamos strip() para quitar espacios extra
+            # y lower() para estandarizar todo en minúsculas
             colores = [c.strip().lower() for c in paleta.split(",")]
+            # Y extendemos la lista principal 'lista_colores' agregando todos los colores encontrados
             lista_colores.extend(colores)
 
-    # Se cuenta la frecuencia de colores con counts()
+    # Se cuenta la frecuencia de colores con counts() y se guarda en una lista: conteo_colores
     conteo_colores = pd.Series(lista_colores).value_counts()
 
     #  GRÁFICO (FRECUENCIA DE PALETAS)
-    st.markdown("## Frecuencia de colores más usados en las películas de Studio Ghibli")
+    st.markdown("## Frecuencia de colores más usados en las películas de Studio Ghibli") # Creamos un título para el gráfico
 
-    fig, ax = plt.subplots(figsize=(12,6))
-    ax.barh(conteo_colores.index, conteo_colores.values, color="#2C715F")
+    fig, ax = plt.subplots(figsize=(12,6)) # Creamos una figura y eje para el gráfico, establecemos el tamaño en 12 pulgadas de ancho y 6 de alto
+    # conteo_colores.index: asigna nombres de los colores a las etiquetas del eje Y.
+    # conteo_colores.values: define cantidades o frecuencias de cada color.
+    # color="#2C715F": asigna el color a las barras.
+    ax.barh(
+        conteo_colores.index,
+        conteo_colores.values,
+        color=["#A97338", "#d7c092", "#9FB15E", "#949619", ]
+        ) 
+    
     ax.set_ylabel("Colores y Tonos") # Asignamos las etiquetas del eje y
     ax.set_xlabel("Frecuencia")       # Así como las etiquetas del eje x
     ax.set_title("Comparativa de paletas de color en Studio Ghibli") # Asignamos el encabezado al gráfico con ax.set_title
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45) # Rotamos las etiquetas del eje X 45 grados para mejorar su legibilidad
 
     st.pyplot(fig) # Mostramos el gráfico
 
@@ -691,7 +726,7 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
     ax.bar(
         conteo_animacion.index,
         conteo_animacion.values,
-        color="#2C715F"             # Asignamos un color a las barras
+        color=["#B9C297","#D79862","#949619"]            # Asignamos un color a las barras
     )
 
     ax.set_xlabel("Tipo de animación") # Asignamos una etiqueta al eje x, en este caso, el tipo de animación (nombres)
@@ -710,11 +745,11 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
 
     fig, ax = plt.subplots(figsize=(10, 5)) # Ajustamos el tamaño y proporción del gráfico con figsize
     
-    # Para realizar un gráfico horizontal se usa ax.barh en lugar de ax.bar 
+    # Usamos ax.barh para el gráfico horizontal
     ax.barh(
-        conteo_tecnica.index, 
-        conteo_tecnica.values,
-        color="#2C715F" # Asignamos colores a las barras con color
+        conteo_tecnica.index, # Asignamos etiquetas al eje Y, cada técnica de animación encontrada.
+        conteo_tecnica.values, #Asignamos valores numéricos a cada cantidad de películas que usan cada técnica.
+        color=["#949619"] # Asignamos colores a las barras con 'color'.
     )
 
     # Asignamos las respectivas etiquetas en cada eje, así como el encabezado del gráfico
@@ -736,7 +771,7 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
     # Asignamos etiquetas (labels) para el gráfico
     labels = df_grouped_magia.index.tolist()
     sizes = df_grouped_magia.values.tolist() # El tamaño será proporcional a los datos encontrados en grouped_magia
-    colors = ['#7FB3D5', '#C39BD3']  # Colores diferenciados para cada porción
+    colors = ['#d7c092','#D79862']  # Colores diferenciados para cada porción
     explode = (0.05, 0.05)  # Explode se usa para la separación visual de las porciones
 
     # Crear figura, edita el tamaño y proporción de esta
@@ -808,7 +843,8 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
     wc_animales = WordCloud(
         width=800,
         height=400,
-        background_color="white"
+        background_color="white",
+        colormap="viridis"
     ).generate_from_frequencies(frecuencias_animales)
 
     # Mostramos el gráfico
@@ -838,7 +874,8 @@ elif pagina_seleccionada == "Apartado Artistico":  # Si el usuario selecciona la
     wc_transportes = WordCloud(
         width=800,
         height=400,
-        background_color="white"
+        background_color="white",
+        colormap="viridis"
     ).generate_from_frequencies(frecuencias_transportes)
 
     # Editamos el tamañoy proporciones y mostramos el gráfico
