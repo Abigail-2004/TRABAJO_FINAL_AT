@@ -24,7 +24,7 @@ pagina_seleccionada = st.sidebar.selectbox('Selecciona una página', paginas)
 
 # El uso de los condicionales hará que nos muestren la página  
 if pagina_seleccionada == "Inicio": # Por ejemplo, la función "if" permite que si escogemos "Inicio" nos encontraremos en la primera página 
-    #st.image("logo.png", width=700)
+    st.image("ghibliweb_logo.png", width=700) # La función st.image permite introducir imágenes.
     # La función st.markdown establece parámetros de texto en Streamlit.
     # Para centrar texto se usa 'text-align: center;' h1 es uno de los títulos más grandes que streamlit permite, unsafe_allow_html=True permite el uso de HTML y estilos CSS en streamlit.
     st.markdown("<h1 style='text-align: center;'>¡Bienvenido/a al mundo encantado de Studio Ghibli! ✨</h1>", unsafe_allow_html=True)
@@ -36,14 +36,8 @@ if pagina_seleccionada == "Inicio": # Por ejemplo, la función "if" permite que 
     <p>Nuestro objetivo es ofrecerte un espacio entretenido, informativo y fácil de navegar, para que puedas explorar, aprender y maravillarte con la magia que Ghibli ha compartido con el mundo.
     </div>
     """, unsafe_allow_html=True) # Escribimos un texto de bienvenida, y una breve explicación de la página.
-    col1, col2, col3 = st.columns(3) #Usamos esta función para crear columnas, de esta manera  la imagen que deseamos usar, verse más ordenado
-    with col1: #Esto se usa para agregar contenido a una columna
-        st.write(" ") #Aquí se escribe el contenido que quieres introducir en la columna
-    with col2:
-    #Con esta función, introducimos una imagen para rellenar el espacio
-        st.image('https://i.pinimg.com/originals/8c/ac/ec/8cacec3c6545e952341c2a5b90f047b0.gif')
-    with col3:
-        st.write(" ")
+    st.image("studio_ghibli.png", width=700)
+
 elif pagina_seleccionada == "Explora": # Si escogemos "Explora" de los botones de navegación, nos encontraremos en la segunda página
     st.markdown("<h1 style='text-align: center;'>EXPLORA</h1>", unsafe_allow_html=True) #Agregamos otro st. markdown para el encabezadp del apartado
     st.markdown("""
@@ -1029,16 +1023,16 @@ else: # Sino se eligió ninguna de las páginas anteriores entonces se mostrará
         st.session_state["mensaje"] = ""    
         st.session_state["juego_activo"] = True # Indica que el juego está en curso
 
-    # --------------------------
-    #        INTERFAZ
-    # --------------------------
+
+    # ====INTERFAZ====
+
     st.title("🎬 Adivina el Director") # Agregamos un título para el juego
 
-    # Botón para iniciar el juego       
+    # Creamos el botón para iniciar el juego       
     if st.button("🎲 Nueva película"):  # Cuando el usuario presione el botón de Nueva película
         iniciar_juego(df)                # se activa la función iniciar_juego y se selecciona una película y se reinicia todo
 
-    # Mostrar interfaz solo si hay juego activo
+    # Se muestra la interfaz solo si hay juego activo
     if st.session_state.get("juego_activo", False): # Si no hay un juego activo, la interfaz no se muestra.
 
         st.image(st.session_state["portada"], width=300) # Muestra la portada de la película actual extraída de la columna "Portada" del df
